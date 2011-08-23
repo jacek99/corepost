@@ -12,7 +12,7 @@ app = CorePost()
 def test():
     return "test"
 
-@app.route("/",(Http.POST,Http.PUT))
+@app.route("/test/<int:jacek>/test/<stringid>/float/<float:floater>/test2",(Http.POST,Http.PUT))
 def test_post():
     return "test POST/PUT"
 

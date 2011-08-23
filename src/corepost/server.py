@@ -3,6 +3,7 @@ Created on 2011-08-23
 
 @author: jacekf
 '''
+import re
 from twisted.internet import reactor
 from twisted.web.resource import Resource
 from twisted.web.server import Site
@@ -31,14 +32,39 @@ class MediaType:
     TEXT_HTML = "text/html"
     
 class RequestRouter:
+    
+    __urlMatcher = re.compile(r"<(int|float|):?([a-zA-Z0-9]+)>")
+    __urlRegexReplace = {"":r"(.+)","int":r"(d+)","float":r"(d+\.d+)"}
+    
     """ Common class for containing info related to routing a request to a function """
-    def __init__(self,url,method,accepts,produces):
+    def __init__(self,f,url,method,accepts,produces):
         self.__url = url
         self.__method = method
         self.__accepts = accepts
         self.__produces = produces
+        self.__f = f
+        self.__args = [] # dict of arg names -> group index
         
         #parse URL into regex used for matching
+        m = RequestRouter.__urlMatcher.findall(url)
+        
+        self.__matchUrl = url
+        for match in m:
+            self.__args.append(match[1])
+            if len(match[0]) == 0:
+                # string
+                self.__matchUrl = self.__matchUrl.replace("<%s>" % match[1],RequestRouter.__urlRegexReplace[match[0]])
+            else:
+                # non string
+                self.__matchUrl = self.__matchUrl.replace("<%s:%s>" % match,RequestRouter.__urlRegexReplace[match[0]])
+
+        self.__matcher = re.compile(self.__matchUrl)
+        
+    def getMatch(self,url):
+        return self.__matcher.findall(url)
+        
+    def call(self,**kwargs):
+        self.__f(**kwargs)
     
 class CorePost(Resource):
     '''
@@ -61,6 +87,7 @@ class CorePost(Resource):
 
             for method in methods:
                 self.__urls[method][url] = f
+                rq = RequestRouter(f, url, method, accepts, produces)
             
             self.__methods[url] = f
 
