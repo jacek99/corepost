@@ -1,20 +1,24 @@
 '''
-Created on 2011-08-23
-
+Server tests
 @author: jacekf
 '''
 
-from corepost.server import CorePost, Http
+from corepost.server import CorePost
+from corepost.enums import Http
 
 app = CorePost()
 
 @app.route("/",Http.GET)
-def test():
-    return "test"
+def root(request):
+    return request.path
 
-@app.route("/test/<int:jacek>/test/<stringid>/float/<float:floater>/test2",(Http.POST,Http.PUT))
-def test_post():
-    return "test POST/PUT"
+@app.route("/test",Http.GET)
+def test(request):
+    return request.path
+
+@app.route("/test/<int:jacek>/yo/<someid>",Http.GET)
+def test_get_resources(request,jacek,someid,**kwargs):
+    return "%s - %s" % (jacek,someid)
 
 if __name__ == '__main__':
     app.run()
