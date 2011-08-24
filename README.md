@@ -8,7 +8,7 @@ Geared towards creating REST-oriented server platforms (e.g. as a source of data
 Tested exclusively on PyPy for maximum performance.
 
 Example:
-^^^^^^^
+-------
 
 	from corepost.server import CorePost
 	from corepost.enums import Http
@@ -31,13 +31,13 @@ Example:
 	    app.run()
 	    
 Performance
-^^^^^^^^^^^
+-----------
 
 Pushing 8,000+ TPS on a simple 'Hello World' app using 'ab -n 100000 -c 200' 
 for benchmarking while running on PyPy 1.6
 
 Plans
-^^^^^
+-----
 
 * match all the relevant features of the Flask API
 * integrate twisted.internet.processes in order to scale to multiple CPU cores : http://pypi.python.org/pypi/twisted.internet.processes
