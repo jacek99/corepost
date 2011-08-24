@@ -3,12 +3,13 @@ Main server classes
 
 @author: jacekf
 '''
-import re
+import re, copy
 from twisted.internet import reactor
 from twisted.web.resource import Resource
 from twisted.web.server import Site
 from collections import defaultdict
 from enums import MediaType
+from corepost.enums import Http
     
 class RequestRouter:
     """ Common class for containing info related to routing a request to a function """
@@ -139,9 +140,10 @@ class CorePost(Resource):
     def __renderUrl(self,request):
         """Finds the appropriate router and dispatches the request to the registered function"""
         # see if already cached
+        urlrouter, pathargs = None, None
         if request.path in self.__cachedUrls[request.method]:
             cachedUrl = self.__cachedUrls[request.method][request.path]
-            return cachedUrl.router.call(request,**cachedUrl.args)
+            urlrouter,pathargs = cachedUrl.router, cachedUrl.args 
         else:
             # first time this URL is called
             for router in self.__urls[request.method].values():
@@ -149,9 +151,23 @@ class CorePost(Resource):
                 if args != None:
                     if router.cache:
                         self.__cachedUrls[request.method][request.path] = CachedUrl(router, args)
-                    return router.call(request,**args)
-        
-        return self.__renderError(request,404,"URL '%s' not found\n" % request.path)
+                    urlrouter,pathargs = router,args
+                    
+        #actual call
+        if urlrouter != None and pathargs != None:
+            allargs = copy.deepcopy(pathargs)
+            #merge form args
+            for arg in request.args.keys():
+                # maintain first instance of an argument always
+                if arg not in allargs:
+                    allargs[arg] = request.args[arg][0]
+                    
+            # if POST/PUT, check if we need to automatically parse JSON
+            # TODO
+            
+            return urlrouter.call(request,**allargs)
+        else:
+            return self.__renderError(request,404,"URL '%s' not found\n" % request.path)
     
     def __renderError(self,request,code,message):
         """Common method for rendering errors"""
