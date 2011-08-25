@@ -36,7 +36,8 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     install_requires=[
-         'Twisted Web>=11.0.0',
-         'twisted.internet.processes>=1.0b1',
+         'twisted>=11.0.0',
+         'twisted.internet.processes>=1.0b1'
     ],
+      
 )
