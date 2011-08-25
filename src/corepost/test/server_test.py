@@ -5,12 +5,16 @@ Server tests
 
 from corepost.server import CorePost
 from corepost.enums import Http
+from twisted.internet import defer
 
 app = CorePost()
 
 @app.route("/",Http.GET)
+@defer.inlineCallbacks
 def root(request,**kwargs):
-    return "%s" % kwargs
+    yield 1
+    request.write("%s" % kwargs)
+    request.finish()
 
 @app.route("/test",Http.GET)
 def test(request,**kwargs):

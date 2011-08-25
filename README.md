@@ -30,11 +30,22 @@ Example:
 	if __name__ == '__main__':
 	    app.run()
 	    
+@defer.inlineCallbacks support
+------------------------------
+
+If you want a deferred async method, just complete the request yourself, instead of returning a string response
+
+	@app.route("/",Http.GET)
+	@defer.inlineCallbacks
+	def root(request):
+		val = yield db.query("SELECT ....")
+		request.write(val)
+	    request.finish()
+	    	        
 Performance
 -----------
 
-Pushing 8,000+ TPS on a simple 'Hello World' app using 'ab -n 100000 -c 200' 
-for benchmarking while running on PyPy 1.6
+On par with raw *twisted.web* performance. Minimal overhead for URL routing and function argument extraction.
 
 Plans
 -----

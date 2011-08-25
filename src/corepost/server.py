@@ -4,9 +4,9 @@ Main server classes
 @author: jacekf
 '''
 import re, copy
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 from twisted.web.resource import Resource
-from twisted.web.server import Site
+from twisted.web.server import Site, NOT_DONE_YET
 from collections import defaultdict
 from enums import MediaType
 from corepost.enums import Http
@@ -165,7 +165,15 @@ class CorePost(Resource):
             # if POST/PUT, check if we need to automatically parse JSON
             # TODO
             
-            return urlrouter.call(request,**allargs)
+            #handle Deferreds natively
+            
+            val = urlrouter.call(request,**allargs)
+            if isinstance(val,defer.Deferred):
+                # we assume the method will call request.finish()
+                return NOT_DONE_YET
+            else:
+                return val
+            
         else:
             return self.__renderError(request,404,"URL '%s' not found\n" % request.path)
     
