@@ -3,7 +3,7 @@ Server tests
 @author: jacekf
 '''
 
-from corepost.server import CorePost
+from corepost.web import CorePost
 from corepost.enums import Http
 from twisted.internet import defer
 
