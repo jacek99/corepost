@@ -10,7 +10,7 @@ Tested exclusively on PyPy for maximum performance.
 Example
 -------
 
-	from corepost.server import CorePost
+	from corepost.web import CorePost
 	from corepost.enums import Http
 	
 	app = CorePost()
