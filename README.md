@@ -40,7 +40,7 @@ If you want a deferred async method, just complete the request yourself, instead
 	def root(request,**kwargs):
 		val = yield db.query("SELECT ....")
 		request.write(val)
-	    request.finish()
+		request.finish()
 	    	        
 Performance
 -----------
