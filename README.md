@@ -7,7 +7,7 @@ Provides a more Flask/Sinatra-style API on top of the core *twisted.web* APIs.
 Geared towards creating REST-oriented server platforms (e.g. as a source of data for a Javascript MVC app).
 Tested exclusively on PyPy for maximum performance.
 
-Example:
+Example
 -------
 
 	from corepost.server import CorePost
@@ -16,11 +16,11 @@ Example:
 	app = CorePost()
 	
 	@app.route("/",Http.GET)
-	def root(request):
+	def root(request,**kwargs):
 	    return request.path
 	
 	@app.route("/test",Http.GET)
-	def test(request):
+	def test(request,**kwargs):
 	    return request.path
 	
 	@app.route("/test/<int:numericid>/test2/<stringid>",Http.GET)
@@ -37,7 +37,7 @@ If you want a deferred async method, just complete the request yourself, instead
 
 	@app.route("/",Http.GET)
 	@defer.inlineCallbacks
-	def root(request):
+	def root(request,**kwargs):
 		val = yield db.query("SELECT ....")
 		request.write(val)
 	    request.finish()
