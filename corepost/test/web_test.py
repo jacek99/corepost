@@ -8,6 +8,7 @@ from corepost.enums import Http
 from twisted.internet import defer
 
 app = CorePost()
+app.isLeaf = True
 
 @app.route("/",Http.GET)
 @defer.inlineCallbacks
@@ -29,4 +30,7 @@ def test_post(request,**kwargs):
     return "%s" % kwargs
 
 if __name__ == '__main__':
+    # hookup submodule
+    #from submodule_test import submodule
+    app.putChild("submodule", submodule)
     app.run()
