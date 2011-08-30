@@ -96,7 +96,7 @@ class CorePost(Resource):
     '''
     isLeaf = True
     
-    def __init__(self):
+    def __init__(self,path=''):
         '''
         Constructor
         '''
@@ -104,6 +104,11 @@ class CorePost(Resource):
         self.__urls = defaultdict(dict)
         self.__cachedUrls = defaultdict(dict)
         self.__methods = {}
+        self.__path = path
+
+    @property
+    def path(self):
+        return self.__path    
 
     def __registerFunction(self,f,url,methods,accepts,produces,cache):
         if f not in self.__methods.values():
@@ -116,7 +121,7 @@ class CorePost(Resource):
             
             self.__methods[url] = f
 
-    def route(self,url,methods=[],accepts=MediaType.WILDCARD,produces=None,cache=True):
+    def route(self,url,methods=(Http.GET,),accepts=MediaType.WILDCARD,produces=None,cache=True):
         """Main decorator for registering REST functions """
         def wrap(f):
             self.__registerFunction(f, url, methods, accepts, produces,cache)
@@ -143,7 +148,7 @@ class CorePost(Resource):
         """Finds the appropriate router and dispatches the request to the registered function"""
         # see if already cached
         path = '/' + '/'.join(request.postpath)
-        
+                
         urlrouter, pathargs = None, None
         if path in self.__cachedUrls[request.method]:
             cachedUrl = self.__cachedUrls[request.method][path]

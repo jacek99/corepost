@@ -52,3 +52,20 @@ Feature: URL routing
 		Then I expect HTTP code 200
 		And I expect content contains '{'test': 'value', 'test2': 'value2'}'
 		
+	@multi
+	Scenario Outline: Multiple resources with submodules
+		Given 'multi_resource' is running
+		When as user 'None:None' I GET '<url>'
+		Then I expect HTTP code 200
+		
+		Examples:
+			| url									|
+			| http://127.0.0.1:8081					|
+			| http://127.0.0.1:8081/				|
+			| http://127.0.0.1:8081/module1			|
+			| http://127.0.0.1:8081/module1/		|	
+			| http://127.0.0.1:8081/module1/sub		|
+			| http://127.0.0.1:8081/module2			|
+			| http://127.0.0.1:8081/module2/		|	
+			| http://127.0.0.1:8081/module2/sub		|
+		

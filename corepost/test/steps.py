@@ -5,11 +5,12 @@ Common Freshen BDD steps
 '''
 from multiprocessing import Process
 import httplib2, json, re, time
-from freshen import Before, After, Given, When, Then, scc, assert_equals, assert_true #@UnresolvedImport
+from freshen import Before, After, Given, When, Then, scc, glc, assert_equals, assert_true #@UnresolvedImport
 from urllib import urlencode
 from corepost.test.home_resource import run_app_home
+from corepost.test.multi_resource import run_app_multi
 
-apps = {'home_resource' : run_app_home}
+apps = {'home_resource' : run_app_home,'multi_resource':run_app_multi}
 
 def as_dict(parameters):
     dict_val = {}
@@ -25,14 +26,7 @@ def as_dict(parameters):
 
 @Before
 def setup(slc):
-    scc.processes = []
     scc.http_headers = {}
-
-@After
-def cleanup(slc):
-    # shut down processes
-    for process in scc.processes:
-        process.terminate()
 
 ##################################
 # GIVEN
@@ -40,11 +34,17 @@ def cleanup(slc):
 
 @Given(r"^'(.+)' is running\s*$")
 def given_process_is_running(processname):
-    process = Process(target=apps[processname])
-    process.daemon = True
-    process.start()
-    scc.processes.append(process)
-    time.sleep(0.25) # let it start up
+    if glc.processes == None:
+        glc.processes = {}
+
+    if processname not in glc.processes:
+        # start a process only once, keep it running
+        # to make test runs faster
+        process = Process(target=apps[processname])
+        process.daemon = True
+        process.start()
+        time.sleep(0.25) # let it start up
+        glc.processes[processname] = process
 
 ##################################
 # WHEN
