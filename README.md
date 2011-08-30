@@ -34,12 +34,12 @@ The simplest possible REST application:
 	    app.run()
 
 
-Multiple module REST application
+Multi-module REST application
 --------------------------------
 
-The key CorePost object is just an extension of the regular twisted.web Resource object
-and as such can easily be used to assemble a multi-module REST applications with
-different CorePost objects serving from different context paths:
+The key CorePost object is just an extension of the regular twisted.web Resource object.
+Therefore, it can easily be used to assemble a multi-module REST applications with
+different CorePost resources serving from different context paths:
 
     from corepost.web import CorePost
     from corepost.enums import Http
