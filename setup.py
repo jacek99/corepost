@@ -16,7 +16,7 @@ def read(fname):
 
 setup(
     name="CorePost",
-    version="0.0.1",
+    version="0.0.2",
     author="Jacek Furmankiewicz",
     author_email="jacek99@gmail.com",
     description=("A Twisted Web REST micro-framework"),
@@ -37,7 +37,9 @@ setup(
     ],
     install_requires=[
          'twisted>=11.0.0',
-         'twisted.internet.processes>=1.0b1'
+         'twisted.internet.processes>=1.0b1',
+         'httplib2>=0.7.1',
+         'freshen>=0.2',
     ],
       
 )
