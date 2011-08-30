@@ -7,6 +7,7 @@ import re, copy
 from twisted.internet import reactor, defer
 from twisted.web.resource import Resource
 from twisted.web.server import Site, NOT_DONE_YET
+from twisted.web.http import parse_qs
 from collections import defaultdict
 from enums import MediaType
 from corepost.enums import Http
@@ -159,11 +160,17 @@ class CorePost(Resource):
         #actual call
         if urlrouter != None and pathargs != None:
             allargs = copy.deepcopy(pathargs)
+            # handler for weird Twisted logic where PUT does not get form params
+            # see: http://twistedmatrix.com/pipermail/twisted-web/2007-March/003338.html
+            requestargs = request.args
+            if request.method == Http.PUT:
+                requestargs = parse_qs(request.content.read(), 1)
+
             #merge form args
-            for arg in request.args.keys():
+            for arg in requestargs.keys():
                 # maintain first instance of an argument always
                 if arg not in allargs:
-                    allargs[arg] = request.args[arg][0]
+                    allargs[arg] = requestargs[arg][0]
                     
             # if POST/PUT, check if we need to automatically parse JSON
             # TODO
@@ -178,9 +185,6 @@ class CorePost(Resource):
                 return val
             
         else:
-            # could be part of a submodule
-            
-            
             return self.__renderError(request,404,"URL '%s' not found\n" % request.path)
     
     def __renderError(self,request,code,message):
