@@ -19,7 +19,7 @@ class RequestRouter:
     __urlRegexReplace = {"":r"(?P<arg>.+)","int":r"(?P<arg>\d+)","float":r"(?P<arg>\d+.?\d*)"}
     __typeConverters = {"int":int,"float":float}
     
-    def __init__(self,f,url,method,accepts,produces,cache):
+    def __init__(self,f,url,method,accepts,produces,cache, schema):
         self.__url = url
         self.__method = method
         self.__accepts = accepts
@@ -27,6 +27,7 @@ class RequestRouter:
         self.__cache = cache
         self.__f = f
         self.__argConverters = {} # dict of arg names -> group index
+        self.__schema = schema
         
         #parse URL into regex used for matching
         m = RequestRouter.__urlMatcher.findall(url)
@@ -50,6 +51,11 @@ class RequestRouter:
     def cache(self):
         """Indicates if this URL should be cached or not"""
         return self.__cache    
+
+    @property
+    def schema(self):
+        """Returns the formencode Schema, if this URL uses custom validation schema"""
+        return self.__schema   
         
     def getArguments(self,url):
         """
@@ -96,7 +102,7 @@ class CorePost(Resource):
     '''
     isLeaf = True
     
-    def __init__(self,path=''):
+    def __init__(self,path='',schema=None):
         '''
         Constructor
         '''
@@ -105,26 +111,27 @@ class CorePost(Resource):
         self.__cachedUrls = defaultdict(dict)
         self.__methods = {}
         self.__path = path
+        self.__schema = schema
 
     @property
     def path(self):
         return self.__path    
 
-    def __registerFunction(self,f,url,methods,accepts,produces,cache):
+    def __registerFunction(self,f,url,methods,accepts,produces,cache,schema):
         if f not in self.__methods.values():
             if not isinstance(methods,(list,tuple)):
                 methods = (methods,)
 
             for method in methods:
-                rq = RequestRouter(f, url, method, accepts, produces,cache)
+                rq = RequestRouter(f, url, method, accepts, produces,cache,schema)
                 self.__urls[method][url] = rq
             
             self.__methods[url] = f
 
-    def route(self,url,methods=(Http.GET,),accepts=MediaType.WILDCARD,produces=None,cache=True):
+    def route(self,url,methods=(Http.GET,),accepts=MediaType.WILDCARD,produces=None,cache=True, schema=None):
         """Main decorator for registering REST functions """
         def wrap(f):
-            self.__registerFunction(f, url, methods, accepts, produces,cache)
+            self.__registerFunction(f, url, methods, accepts, produces,cache, schema)
             return f
         return wrap
 
@@ -179,9 +186,11 @@ class CorePost(Resource):
                     
             # if POST/PUT, check if we need to automatically parse JSON
             # TODO
+ 
+            #validate input against formencode schema if defined
+            self.__validateArguments(urlrouter, request, allargs)
             
             #handle Deferreds natively
-            
             val = urlrouter.call(request,**allargs)
             if isinstance(val,defer.Deferred):
                 # we assume the method will call request.finish()
@@ -191,6 +200,13 @@ class CorePost(Resource):
             
         else:
             return self.__renderError(request,404,"URL '%s' not found\n" % request.path)
+    
+    def __validateArguments(self,urlrouter,request,allargs):
+        schema = urlrouter.schema if urlrouter.schema != None else self.__schema
+        if schema != None:
+            from formencode import Schema
+            
+            
     
     def __renderError(self,request,code,message):
         """Common method for rendering errors"""
