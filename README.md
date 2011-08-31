@@ -12,6 +12,8 @@ Single REST module example
 
 The simplest possible REST application:
 
+::
+
 	from corepost.web import CorePost
 	from corepost.enums import Http
 	
@@ -40,6 +42,8 @@ Multi-module REST application
 The key CorePost object is just an extension of the regular twisted.web Resource object.
 Therefore, it can easily be used to assemble a multi-module REST applications with
 different CorePost resources serving from different context paths:
+
+::
 
     from corepost.web import CorePost
     from corepost.enums import Http
@@ -97,6 +101,23 @@ The example above creates 3 modules ("/","module1","/module2") and exposes the f
 	http://127.0.0.1:8080/module2/			
 	http://127.0.0.1:8080/module2/sub	
 
+Path argument extraction
+------------------------
+
+CorePort can easily extract path arguments from an URL and convert them to the desired type.
+
+The supported types are:
+* *int*, e.g. '<int:some_int_arg>'
+* *float*, e.g. '<int:some_float_arg>'
+* *string*, e.g. '<string_arg>'
+
+Example:
+
+::
+
+	@app.route("/int/<int:intarg>/float/<float:floatarg>/string/<stringarg>",Http.GET)
+	def test(request,intarg,floatarg,stringarg,**kwargs):
+		pass
 	    
 @defer.inlineCallbacks support
 ------------------------------

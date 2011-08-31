@@ -9,8 +9,9 @@ from freshen import Before, After, Given, When, Then, scc, glc, assert_equals, a
 from urllib import urlencode
 from corepost.test.home_resource import run_app_home
 from corepost.test.multi_resource import run_app_multi
+from corepost.test.arguments import run_app_arguments
 
-apps = {'home_resource' : run_app_home,'multi_resource':run_app_multi}
+apps = {'home_resource' : run_app_home,'multi_resource':run_app_multi,'arguments':run_app_arguments}
 
 def as_dict(parameters):
     dict_val = {}
