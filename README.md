@@ -103,9 +103,9 @@ Path argument extraction
 CorePort can easily extract path arguments from an URL and convert them to the desired type.
 
 The supported types are:
-* *int*, e.g. '<int:some_int_arg>'
-* *float*, e.g. '<int:some_float_arg>'
-* *string*, e.g. '<string_arg>'
+* *int*, e.g. "<int:some_int_arg>"
+* *float*, e.g. "<int:some_float_arg>"
+* *string*, e.g. "<string_arg>"
 
 Example:
 
