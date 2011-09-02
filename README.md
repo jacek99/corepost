@@ -12,8 +12,6 @@ Single REST module example
 
 The simplest possible REST application:
 
-::
-
 	from corepost.web import CorePost
 	from corepost.enums import Http
 	
@@ -42,8 +40,6 @@ Multi-module REST application
 The key CorePost object is just an extension of the regular twisted.web Resource object.
 Therefore, it can easily be used to assemble a multi-module REST applications with
 different CorePost resources serving from different context paths:
-
-::
 
     from corepost.web import CorePost
     from corepost.enums import Http
@@ -113,8 +109,6 @@ The supported types are:
 
 Example:
 
-::
-
 	@app.route("/int/<int:intarg>/float/<float:floatarg>/string/<stringarg>",Http.GET)
 	def test(request,intarg,floatarg,stringarg,**kwargs):
 		pass
@@ -130,6 +124,19 @@ If you want a deferred async method, just complete the request yourself, instead
 		val = yield db.query("SELECT ....")
 		request.write(val)
 		request.finish()
+
+HTTP codes
+------------------
+
+Success:
+	* 200 (OK) - GET, DELETE, PUT
+	* 201 (Created_ - POST
+	
+
+Errors:
+	* 404 - not able to match any URL
+	* 400 - missing mandatory argument (driven from the arguments on the actual functions)
+	* 500 - server error
 	    	        
 Performance
 -----------
