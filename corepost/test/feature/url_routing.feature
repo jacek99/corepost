@@ -26,7 +26,7 @@ Feature: URL routing
 	Scenario: Single resource - POST
 		Given 'home_resource' is running
 		When as user 'None:None' I POST 'http://127.0.0.1:8080/post' with 'test=value&test2=value2'
-		Then I expect HTTP code 200
+		Then I expect HTTP code 201
 		And I expect content contains '{'test': 'value', 'test2': 'value2'}'		
 		
 	@single @single_put
@@ -46,9 +46,11 @@ Feature: URL routing
 	Scenario: Single resource - multiple methods at same URL
 		Given 'home_resource' is running
 		When as user 'None:None' I POST 'http://127.0.0.1:8080/postput' with 'test=value&test2=value2'
-		Then I expect HTTP code 200
+		# POST return 201 by default
+		Then I expect HTTP code 201
 		And I expect content contains '{'test': 'value', 'test2': 'value2'}'		
 		When as user 'None:None' I PUT 'http://127.0.0.1:8080/postput' with 'test=value&test2=value2'
+		# PUT return 201 by default
 		Then I expect HTTP code 200
 		And I expect content contains '{'test': 'value', 'test2': 'value2'}'
 		

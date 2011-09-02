@@ -3,7 +3,7 @@ Main server classes
 
 @author: jacekf
 '''
-import re, copy
+import re, copy, exceptions
 from twisted.internet import reactor, defer
 from twisted.web.resource import Resource
 from twisted.web.server import Site, NOT_DONE_YET
@@ -11,15 +11,17 @@ from twisted.web.http import parse_qs
 from collections import defaultdict
 from enums import MediaType
 from corepost.enums import Http
+from corepost.utils import getMandatoryArgumentNames
+from formencode import validators, Schema, Validator
     
 class RequestRouter:
-    """ Common class for containing info related to routing a request to a function """
+    ''' Common class for containing info related to routing a request to a function '''
     
     __urlMatcher = re.compile(r"<(int|float|):?([a-zA-Z0-9]+)>")
     __urlRegexReplace = {"":r"(?P<arg>.+)","int":r"(?P<arg>\d+)","float":r"(?P<arg>\d+.?\d*)"}
     __typeConverters = {"int":int,"float":float}
     
-    def __init__(self,f,url,method,accepts,produces,cache, schema):
+    def __init__(self,f,url,method,accepts,produces,cache):
         self.__url = url
         self.__method = method
         self.__accepts = accepts
@@ -27,7 +29,9 @@ class RequestRouter:
         self.__cache = cache
         self.__f = f
         self.__argConverters = {} # dict of arg names -> group index
-        self.__schema = schema
+        self.__schema = None
+        self.__validators = {}
+        self.__mandatory = getMandatoryArgumentNames(f)[1:]
         
         #parse URL into regex used for matching
         m = RequestRouter.__urlMatcher.findall(url)
@@ -49,19 +53,23 @@ class RequestRouter:
         
     @property
     def cache(self):
-        """Indicates if this URL should be cached or not"""
+        '''Indicates if this URL should be cached or not'''
         return self.__cache    
 
     @property
     def schema(self):
-        """Returns the formencode Schema, if this URL uses custom validation schema"""
+        ''''Returns the formencode Schema, if this URL uses custom validation schema'''
         return self.__schema   
         
+    def addValidator(self,fieldName,validator):
+        '''Adds additional field-specific formencode validators'''
+        self.__validators[fieldName] = validator
+        
     def getArguments(self,url):
-        """
+        '''
         Returns None if nothing matched (i.e. URL does not match), empty dict if no args found (i,e, static URL)
         or dict with arg/values for dynamic URLs
-        """
+        '''
         g = self.__matcher.search(url)
         if g != None:
             args = g.groupdict()
@@ -76,14 +84,17 @@ class RequestRouter:
             return None
         
     def call(self,request,**kwargs):
-        """Forwards call to underlying method"""
+        '''Forwards call to underlying method'''
+        for arg in self.__mandatory:
+            if arg not in kwargs:
+                raise TypeError("Missing mandatory argument '%s'" % arg)
         return self.__f(request,**kwargs)
 
 class CachedUrl():
-    """
+    '''
     Used for caching URLs that have been already routed once before. Avoids the overhead
     of regex processing on every incoming call for commonly accessed REST URLs
-    """
+    '''
     def __init__(self,router,args):
         self.__router = router
         self.__args = args
@@ -110,6 +121,7 @@ class CorePost(Resource):
         self.__urls = defaultdict(dict)
         self.__cachedUrls = defaultdict(dict)
         self.__methods = {}
+        self.__routers = {}
         self.__path = path
         self.__schema = schema
 
@@ -117,23 +129,33 @@ class CorePost(Resource):
     def path(self):
         return self.__path    
 
-    def __registerFunction(self,f,url,methods,accepts,produces,cache,schema):
+    def __registerFunction(self,f,url,methods,accepts,produces,cache):
         if f not in self.__methods.values():
             if not isinstance(methods,(list,tuple)):
                 methods = (methods,)
 
             for method in methods:
-                rq = RequestRouter(f, url, method, accepts, produces,cache,schema)
+                rq = RequestRouter(f, url, method, accepts, produces,cache)
                 self.__urls[method][url] = rq
+                self.__routers[f] = rq # needed so that we can lookup the router for a specific function
             
             self.__methods[url] = f
 
-    def route(self,url,methods=(Http.GET,),accepts=MediaType.WILDCARD,produces=None,cache=True, schema=None):
+    def route(self,url,methods=(Http.GET,),accepts=MediaType.WILDCARD,produces=None,cache=True):
         """Main decorator for registering REST functions """
-        def wrap(f):
-            self.__registerFunction(f, url, methods, accepts, produces,cache, schema)
+        def wrap(f,*args,**kwargs):
+            self.__registerFunction(f, url, methods, accepts, produces,cache)
             return f
         return wrap
+
+    def validate(self,schema=None,**kwargs):
+        '''
+        Main decorator for registering additional validators for incoming URL arguments
+        '''
+        def wrap(f,**kwargs):
+            print kwargs
+            return f
+        return wrap    
 
     def render_GET(self,request):
         """ Handles all GET requests """
@@ -187,26 +209,30 @@ class CorePost(Resource):
             # if POST/PUT, check if we need to automatically parse JSON
             # TODO
  
-            #validate input against formencode schema if defined
-            self.__validateArguments(urlrouter, request, allargs)
-            
             #handle Deferreds natively
-            val = urlrouter.call(request,**allargs)
-            if isinstance(val,defer.Deferred):
-                # we assume the method will call request.finish()
-                return NOT_DONE_YET
-            else:
-                return val
+            try:
+                val = urlrouter.call(request,**allargs)
+            
+                if isinstance(val,defer.Deferred):
+                    # we assume the method will call request.finish()
+                    return NOT_DONE_YET
+                else:
+                    #special logic for POST to return 201 (created)
+                    if request.method == Http.POST:
+                        if hasattr(request, 'code'):
+                            if request.code == 200:
+                                request.setResponseCode(201)
+                        else:
+                            request.setResponseCode(201)
+                    
+                    return val
+            except exceptions.TypeError as ex:
+                return self.__renderError(request,400,"%s" % ex)
+            except Exception as ex:
+                return self.__renderError(request,500,"Unexpected server error: %s" % type(ex))                
             
         else:
             return self.__renderError(request,404,"URL '%s' not found\n" % request.path)
-    
-    def __validateArguments(self,urlrouter,request,allargs):
-        schema = urlrouter.schema if urlrouter.schema != None else self.__schema
-        if schema != None:
-            from formencode import Schema
-            
-            
     
     def __renderError(self,request,code,message):
         """Common method for rendering errors"""
