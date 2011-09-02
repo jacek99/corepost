@@ -5,14 +5,23 @@ Feature: Argument Validators
 	CorePost should be able to correctly validate path, query and form arguments
 	
 	@validate
-	Scenario Outline: Path argument extraction
+	Scenario Outline: Form argument validation
 		Given 'arguments' is running
-		When as user 'None:None' I POST 'http://127.0.0.1:8082/validate/23/children' with '<args>'
+		# childId accepts only jacekf or test, via Regex validator
+		When as user 'None:None' I POST 'http://127.0.0.1:8082/validate/23/<url>' with '<args>'
 		Then I expect HTTP code <code>
 		And I expect content contains '<content>'
 
 		Examples:
-			| args												| code	| content																|
-			| childId=jacekf									| 201	| 23 - jacekf - {}														|
-			| childId=jacekf&otherId=test						| 201	| 23 - jacekf - {'otherId': 'test'}										|
+			| url		| args												| code	| content																|
+			# validates using argument-specific validators
+			| custom	| childId=jacekf									| 201	| 23 - jacekf - {}														|
+			| custom	| childId=jacekf&otherId=test						| 201	| 23 - jacekf - {'otherId': 'test'}										|
+			| custom	| childId=test										| 201	| 23 - test - {}														|
+			| custom	| childId=wrong										| 400	| 'wrong' is not a valid value for 'childId': The input is not valid	|			
+			# validates using Schema
+			| schema	| childId=jacekf									| 201	| 23 - jacekf - {}														|
+			| schema	| childId=jacekf&otherId=test						| 201	| 23 - jacekf - {'otherId': 'test'}										|
+			| schema	| childId=test										| 201	| 23 - test - {}														|
+			| schema	| childId=wrong										| 400	| 'wrong' is not a valid value for 'childId': The input is not valid	|			
 		

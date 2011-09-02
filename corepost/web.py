@@ -12,7 +12,7 @@ from collections import defaultdict
 from enums import MediaType
 from corepost.enums import Http
 from corepost.utils import getMandatoryArgumentNames
-from formencode import validators, Schema, Validator
+from formencode import FancyValidator, Invalid
     
 class RequestRouter:
     ''' Common class for containing info related to routing a request to a function '''
@@ -148,15 +148,6 @@ class CorePost(Resource):
             return f
         return wrap
 
-    def validate(self,schema=None,**kwargs):
-        '''
-        Main decorator for registering additional validators for incoming URL arguments
-        '''
-        def wrap(f,**kwargs):
-            print kwargs
-            return f
-        return wrap    
-
     def render_GET(self,request):
         """ Handles all GET requests """
         return self.__renderUrl(request)
@@ -246,5 +237,41 @@ class CorePost(Resource):
         reactor.listenTCP(port, factory)    #@UndefinedVariable
         reactor.run()                       #@UndefinedVariable
         
+
+##################################################################################################
+#
+# DECORATORS
+#
+##################################################################################################    
     
-    
+def validate(schema=None,**vKwargs):
+    '''
+    Main decorator for registering additional validators for incoming URL arguments
+    '''
+    def fn(realfn):  
+        def wrap(*args,**kwargs):
+            # first run schema validation, then the custom validators
+            errors = ()
+            if schema != None:
+                try:
+                    schema.to_python(kwargs)
+                except Invalid as ex:
+                    errors = ()
+                    for error in ex.error_dict.keys():
+                        errors.append()
+                    raise TypeError("%s" % ex)
+                
+            for arg in vKwargs.keys():
+                validator = vKwargs[arg]
+                if arg in kwargs:
+                    val = kwargs[arg]
+                    try:
+                        validator.to_python(val)
+                    except Invalid as ex:
+                        raise TypeError("'%s' is not a valid value for '%s': %s" % (val,arg,ex))
+                else:
+                    if isinstance(validator,FancyValidator) and validator.not_empty:
+                        raise TypeError("Missing mandatory argument '%s'" % arg)
+            return realfn(*args,**kwargs)
+        return wrap
+    return fn    

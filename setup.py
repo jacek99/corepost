@@ -49,7 +49,7 @@ def read(fname):
 
 setup(
     name="CorePost",
-    version="0.0.4",
+    version="0.0.5",
     author="Jacek Furmankiewicz",
     author_email="jacek99@gmail.com",
     description=("A Twisted Web REST micro-framework"),
