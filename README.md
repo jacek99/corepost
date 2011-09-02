@@ -103,9 +103,10 @@ Path argument extraction
 CorePort can easily extract path arguments from an URL and convert them to the desired type.
 
 The supported types are:
-* *int*, e.g. "<int:some_int_arg>"
-* *float*, e.g. "<int:some_float_arg>"
-* *string*, e.g. "<string_arg>"
+
+* *int*
+* *float*
+* *string*
 
 Example:
 
@@ -130,15 +131,14 @@ HTTP codes
 
 Success:
 
-	* 200 (OK) - GET, DELETE, PUT
-	* 201 (Created) - POST
+* 200 (OK) - GET, DELETE, PUT
+* 201 (Created) - POST
 	
-
 Errors:
 
-	* 404 - not able to match any URL
-	* 400 - missing mandatory argument (driven from the arguments on the actual functions)
-	* 500 - server error
+* 404 - not able to match any URL
+* 400 - missing mandatory argument (driven from the arguments on the actual functions)
+* 500 - server error
 	    	        
 Performance
 -----------
