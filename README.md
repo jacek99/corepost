@@ -142,7 +142,7 @@ Validators can be specified using a *formencode* Schema object, or via custom fi
 	    '''Validate using argument-specific validators'
 	    return "%s - %s - %s" % (rootId,childId,kwargs)	    
 
-Please see the `FormEncode <http://www.formencode.org/en/latest/Validator.html>`_ Validator documentation
+Please see the *FormEncode* <http://www.formencode.org/en/latest/Validator.html> Validator documentation
 for list of available validators:
 
 * Common <http://www.formencode.org/en/latest/modules/validators.html#module-formencode.validators>
