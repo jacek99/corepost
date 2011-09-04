@@ -18,10 +18,10 @@ Feature: Argument Validators
 			| custom	| childId=jacekf									| 201	| 23 - jacekf - {}														|
 			| custom	| childId=jacekf&otherId=test						| 201	| 23 - jacekf - {'otherId': 'test'}										|
 			| custom	| childId=test										| 201	| 23 - test - {}														|
-			| custom	| childId=wrong										| 400	| 'wrong' is not a valid value for 'childId': The input is not valid	|			
+			| custom	| childId=wrong										| 400	| childId: The input is not valid ('wrong')								|			
 			# validates using Schema
 			| schema	| childId=jacekf									| 201	| 23 - jacekf - {}														|
 			| schema	| childId=jacekf&otherId=test						| 201	| 23 - jacekf - {'otherId': 'test'}										|
 			| schema	| childId=test										| 201	| 23 - test - {}														|
-			| schema	| childId=wrong										| 400	| 'wrong' is not a valid value for 'childId': The input is not valid	|			
+			| schema	| childId=wrong										| 400	| childId: The input is not valid ('wrong')								|			
 		

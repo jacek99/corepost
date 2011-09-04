@@ -251,16 +251,15 @@ def validate(schema=None,**vKwargs):
     def fn(realfn):  
         def wrap(*args,**kwargs):
             # first run schema validation, then the custom validators
-            errors = ()
+            errors = []
             if schema != None:
                 try:
                     schema.to_python(kwargs)
                 except Invalid as ex:
-                    errors = ()
-                    for error in ex.error_dict.keys():
-                        errors.append()
-                    raise TypeError("%s" % ex)
-                
+                    for arg, error in ex.error_dict.items():
+                        errors.append("%s: %s ('%s')" % (arg,error.msg,error.value))
+             
+            # custom validators    
             for arg in vKwargs.keys():
                 validator = vKwargs[arg]
                 if arg in kwargs:
@@ -268,10 +267,15 @@ def validate(schema=None,**vKwargs):
                     try:
                         validator.to_python(val)
                     except Invalid as ex:
-                        raise TypeError("'%s' is not a valid value for '%s': %s" % (val,arg,ex))
+                        errors.append("%s: %s ('%s')" % (arg,ex,val))
                 else:
                     if isinstance(validator,FancyValidator) and validator.not_empty:
                         raise TypeError("Missing mandatory argument '%s'" % arg)
+            
+            # fire error if anything failed validation
+            if len(errors) > 0:
+                raise TypeError('\n'.join(errors))
+            # all OK
             return realfn(*args,**kwargs)
         return wrap
     return fn    
