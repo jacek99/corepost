@@ -114,6 +114,40 @@ Example:
 	def test(request,intarg,floatarg,stringarg,**kwargs):
 		pass
 	    
+Argument validation
+-------------------
+
+CorePost integrates the popular 'formencode' package to implement form and query argument validation.
+Validators can be specified using a *formencode* Schema object, or via custom field-specific validators, e.g.:
+
+	from corepost.web import CorePost, validate
+	from corepost.enums import Http
+	from formencode import Schema, validators
+	
+	app = CorePost()
+	
+	class TestSchema(Schema):
+	    allow_extra_fields = True
+	    childId = validators.Regex(regex="^value1|value2$")
+		
+	@app.route("/validate/<int:rootId>/schema",Http.POST)
+	@validate(schema=TestSchema)
+	def postValidateSchema(request,rootId,childId,**kwargs):
+	    '''Validate using a common schema'''
+	    return "%s - %s - %s" % (rootId,childId,kwargs)
+	
+	@app.route("/validate/<int:rootId>/custom",Http.POST)
+	@validate(childId=validators.Regex(regex="^value1|value2$"))
+	def postValidateCustom(request,rootId,childId,**kwargs):
+	    '''Validate using argument-specific validators'
+	    return "%s - %s - %s" % (rootId,childId,kwargs)	    
+
+Please see the `FormEncode <http://www.formencode.org/en/latest/Validator.html>`_ Validator documentation
+for list of available validators:
+
+* 'Common <http://www.formencode.org/en/latest/modules/validators.html#module-formencode.validators>'_
+* 'National <http://www.formencode.org/en/latest/modules/national.html#module-formencode.national>'_
+	    
 @defer.inlineCallbacks support
 ------------------------------
 
@@ -138,6 +172,7 @@ Errors:
 
 * 404 - not able to match any URL
 * 400 - missing mandatory argument (driven from the arguments on the actual functions)
+* 400 - argument failed validation
 * 500 - server error
 	    	        
 Performance

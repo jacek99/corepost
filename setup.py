@@ -4,6 +4,7 @@ Twisted REST micro-framework
 
 Based on *Flask* API, with integrated multiprocessing support for full usage of all CPUs. 
 Provides a more Flask/Sinatra-style API on top of the core *twisted.web* APIs.
+Integrates FormEncode for path, form and query argument validation.
 
 The simplest possible twisted.web CorePost REST application:
 
@@ -32,8 +33,9 @@ The simplest possible twisted.web CorePost REST application:
 Links
 `````
 
-* `website <http://github.com/jacek99/corepost>`_
+* `Website <http://github.com/jacek99/corepost>`_
 * `Twisted <http://twistedmatrix.com>`_
+* `FormEncode <http://www.formencode.org/>`_
 
 """
 
