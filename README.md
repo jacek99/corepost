@@ -145,8 +145,8 @@ Validators can be specified using a *formencode* Schema object, or via custom fi
 Please see the `FormEncode <http://www.formencode.org/en/latest/Validator.html>`_ Validator documentation
 for list of available validators:
 
-* 'Common <http://www.formencode.org/en/latest/modules/validators.html#module-formencode.validators>'_
-* 'National <http://www.formencode.org/en/latest/modules/national.html#module-formencode.national>'_
+* Common <http://www.formencode.org/en/latest/modules/validators.html#module-formencode.validators>
+* National <http://www.formencode.org/en/latest/modules/national.html#module-formencode.national>
 	    
 @defer.inlineCallbacks support
 ------------------------------
