@@ -37,6 +37,12 @@ Links
 * `Twisted <http://twistedmatrix.com>`_
 * `FormEncode <http://www.formencode.org/>`_
 
+Changelog
+`````````
+
+* 0.0.5 - added FormEncode validation for arguments
+* 0.0.4 - path argument extraction, mandatory argument error checking
+
 """
 
 import os
