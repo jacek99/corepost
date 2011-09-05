@@ -10,24 +10,25 @@ The simplest possible twisted.web CorePost REST application:
 
 ::
 
-    from corepost.web import CorePost
+    from corepost.web import CorePost, route
     from corepost.enums import Http
     
-    app = CorePost()
+    class RestApp(CorePost):
     
-    @app.route("/",Http.GET)
-    def root(request,**kwargs):
-        return request.path
-    
-    @app.route("/test",Http.GET)
-    def test(request,**kwargs):
-        return request.path
-    
-    @app.route("/test/<int:numericid>",Http.GET)
-    def test_get_resources(request,numericid,**kwargs):
-        return "%s" % numericid
+        @route("/",Http.GET)
+        def root(self,request,**kwargs):
+            return request.path
+        
+        @route("/test",Http.GET)
+        def test(self,request,**kwargs):
+            return request.path
+        
+        @route("/test/<int:numericid>",Http.GET)
+        def test_get_resources(self,request,numericid,**kwargs):
+            return "%s" % numericid
     
     if __name__ == '__main__':
+        app = RestApp()
         app.run()
 
 Links
@@ -60,7 +61,7 @@ setup(
     name="CorePost",
     version="0.0.6",
     author="Jacek Furmankiewicz",
-    author_email="jacek99@gmail.com",
+    author_email="jacekeadE99@gmail.com",
     description=("A Twisted Web REST micro-framework"),
     license="BSD",
     keywords="twisted rest flask sinatra get post put delete web",

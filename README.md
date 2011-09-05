@@ -12,26 +12,26 @@ Single REST module example
 
 The simplest possible REST application:
 
-	from corepost.web import CorePost
-	from corepost.enums import Http
-	
-	app = CorePost()
-	
-	@app.route("/",Http.GET)
-	def root(request,**kwargs):
-	    return request.path
-	
-	@app.route("/test",Http.GET)
-	def test(request,**kwargs):
-	    return request.path
-	
-	@app.route("/test/<int:numericid>/test2/<stringid>",Http.GET)
-	def test_get_resources(request,numericid,stringid,**kwargs):
-	    return "%s - %s" % (numericid,stringid)
-	
-	if __name__ == '__main__':
-	    # shortcut method to run a CorePost Resource as a single site
-	    app.run()
+    from corepost.web import CorePost, route
+    from corepost.enums import Http
+    
+    class RestApp(CorePost):
+    
+        @route("/",Http.GET)
+        def root(self,request,**kwargs):
+            return request.path
+        
+        @route("/test",Http.GET)
+        def test(self,request,**kwargs):
+            return request.path
+        
+        @route("/test/<int:numericid>",Http.GET)
+        def test_get_resources(self,request,numericid,**kwargs):
+            return "%s" % numericid
+    
+    if __name__ == '__main__':
+        app = RestApp()
+        app.run()
 
 
 Multi-module REST application
@@ -41,60 +41,54 @@ The key CorePost object is just an extension of the regular twisted.web Resource
 Therefore, it can easily be used to assemble a multi-module REST applications with
 different CorePost resources serving from different context paths:
 
-    from corepost.web import CorePost
-    from corepost.enums import Http
-    from twisted.web.resource import Resource
-    from twisted.internet import reactor
-    from twisted.web.server import Site
-
-	# Home module    
-    home = CorePost()
-    
-    @home.route("/")
-    def home_root(request,**kwargs):
-        return "HOME %s" % kwargs
-    
-    # First module
-    module1 = CorePost('module1')
-    
-    @module1.route("/",Http.GET)
-    def module1_get(request,**kwargs):
-        return request.path
-    
-    @module1.route("/sub",Http.GET)
-    def module1e_sub(request,**kwargs):
-        return request.path
-    
-    # Second module
-    module2 = CorePost('module2')
-    
-    @module2.route("/",Http.GET)
-    def module2_get(request,**kwargs):
-        return request.path
-    
-    @module2.route("/sub",Http.GET)
-    def module2_sub(request,**kwargs):
-        return request.path
-    
-    if __name__ == '__main__':
-        app = Resource()
-        app.putChild(home.path, home)
-        app.putChild(module1.path,module1)
-        app.putChild(module2.path,module2)
-    
-        factory = Site(app)
-        reactor.listenTCP(8080, factory) 
-        reactor.run()                   
+	from corepost.web import CorePost, route
+	from corepost.enums import Http
+	from twisted.web.resource import Resource
+	from twisted.internet import reactor
+	from twisted.web.server import Site
+	
+	class HomeApp(CorePost):
+	
+	    @route("/")
+	    def home_root(self,request,**kwargs):
+	        return "HOME %s" % kwargs
+	
+	class Module1(CorePost):
+	
+	    @route("/",Http.GET)
+	    def module1_get(self,request,**kwargs):
+	        return request.path
+	    
+	    @route("/sub",Http.GET)
+	    def module1e_sub(self,request,**kwargs):
+	        return request.path
+	
+	class Module2(CorePost):
+	    
+	    @route("/",Http.GET)
+	    def module2_get(self,request,**kwargs):
+	        return request.path
+	    
+	    @route("/sub",Http.GET)
+	    def module2_sub(self,request,**kwargs):
+	        return request.path
+	
+	def run_app_multi():
+	    app = Resource()
+	    app.putChild('', HomeApp())
+	    app.putChild('module1',Module1())
+	    app.putChild('module2',Module2())
+	
+	    factory = Site(app)
+	    reactor.listenTCP(8081, factory)  #@UndefinedVariable
+	    reactor.run()                   #@UndefinedVariable
 
 The example above creates 3 modules ("/","module1","/module2") and exposes the following URLs:
 
 	http://127.0.0.1:8080					
-	http://127.0.0.1:8080/				
 	http://127.0.0.1:8080/module1		
-	http://127.0.0.1:8080/module1/			
 	http://127.0.0.1:8080/module1/sub		
 	http://127.0.0.1:8080/module2			
-	http://127.0.0.1:8080/module2/			
 	http://127.0.0.1:8080/module2/sub	
 
 Path argument extraction
@@ -110,8 +104,8 @@ The supported types are:
 
 Example:
 
-	@app.route("/int/<int:intarg>/float/<float:floatarg>/string/<stringarg>",Http.GET)
-	def test(request,intarg,floatarg,stringarg,**kwargs):
+	@route("/int/<int:intarg>/float/<float:floatarg>/string/<stringarg>",Http.GET)
+	def test(self,request,intarg,floatarg,stringarg,**kwargs):
 		pass
 	    
 Argument validation
@@ -120,27 +114,27 @@ Argument validation
 CorePost integrates the popular 'formencode' package to implement form and query argument validation.
 Validators can be specified using a *formencode* Schema object, or via custom field-specific validators, e.g.:
 
-	from corepost.web import CorePost, validate
+	from corepost.web import CorePost, validate, route
 	from corepost.enums import Http
 	from formencode import Schema, validators
-	
-	app = CorePost()
-	
+
 	class TestSchema(Schema):
 	    allow_extra_fields = True
 	    childId = validators.Regex(regex="^value1|value2$")
-		
-	@app.route("/validate/<int:rootId>/schema",Http.POST)
-	@validate(schema=TestSchema)
-	def postValidateSchema(request,rootId,childId,**kwargs):
-	    '''Validate using a common schema'''
-	    return "%s - %s - %s" % (rootId,childId,kwargs)
 	
-	@app.route("/validate/<int:rootId>/custom",Http.POST)
-	@validate(childId=validators.Regex(regex="^value1|value2$"))
-	def postValidateCustom(request,rootId,childId,**kwargs):
-	    '''Validate using argument-specific validators'
-	    return "%s - %s - %s" % (rootId,childId,kwargs)	    
+	class MyApp(CorePost):
+		
+		@route("/validate/<int:rootId>/schema",Http.POST)
+		@validate(schema=TestSchema())
+		def postValidateSchema(self,request,rootId,childId,**kwargs):
+		    '''Validate using a common schema'''
+		    return "%s - %s - %s" % (rootId,childId,kwargs)
+		
+		@route("/validate/<int:rootId>/custom",Http.POST)
+		@validate(childId=validators.Regex(regex="^value1|value2$"))
+		def postValidateCustom(self,request,rootId,childId,**kwargs):
+		    '''Validate using argument-specific validators'
+		    return "%s - %s - %s" % (rootId,childId,kwargs)	    
 
 Please see the *FormEncode* <http://www.formencode.org/en/latest/Validator.html> documentation
 for list of available validators:
@@ -153,7 +147,7 @@ for list of available validators:
 
 If you want a deferred async method, just complete the request yourself, instead of returning a string response
 
-	@app.route("/",Http.GET)
+	@route("/",Http.GET)
 	@defer.inlineCallbacks
 	def root(request,**kwargs):
 		val = yield db.query("SELECT ....")
