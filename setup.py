@@ -40,6 +40,7 @@ Links
 Changelog
 `````````
 
+* 0.0.6 - redesigned API around classes and methods, rather than functions and global objects (after feedback from Twisted devs)
 * 0.0.5 - added FormEncode validation for arguments
 * 0.0.4 - path argument extraction, mandatory argument error checking
 
@@ -57,7 +58,7 @@ def read(fname):
 
 setup(
     name="CorePost",
-    version="0.0.5",
+    version="0.0.6",
     author="Jacek Furmankiewicz",
     author_email="jacek99@gmail.com",
     description=("A Twisted Web REST micro-framework"),

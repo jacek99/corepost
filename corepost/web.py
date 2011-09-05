@@ -3,16 +3,18 @@ Main server classes
 
 @author: jacekf
 '''
-import re, copy, exceptions
-from twisted.internet import reactor, defer
-from twisted.web.resource import Resource
-from twisted.web.server import Site, NOT_DONE_YET
-from twisted.web.http import parse_qs
 from collections import defaultdict
-from enums import MediaType
 from corepost.enums import Http
 from corepost.utils import getMandatoryArgumentNames
+from enums import MediaType
 from formencode import FancyValidator, Invalid
+from twisted.internet import reactor, defer
+from twisted.web.http import parse_qs
+from twisted.web.resource import Resource
+from twisted.web.server import Site, NOT_DONE_YET
+import re
+import copy
+import exceptions
     
 class RequestRouter:
     ''' Common class for containing info related to routing a request to a function '''
@@ -21,17 +23,16 @@ class RequestRouter:
     __urlRegexReplace = {"":r"(?P<arg>.+)","int":r"(?P<arg>\d+)","float":r"(?P<arg>\d+.?\d*)"}
     __typeConverters = {"int":int,"float":float}
     
-    def __init__(self,f,url,method,accepts,produces,cache):
+    def __init__(self,f,url,methods,accepts,produces,cache):
         self.__url = url
-        self.__method = method
+        self.__methods = methods if isinstance(methods,tuple) else (methods,)
         self.__accepts = accepts
         self.__produces = produces
         self.__cache = cache
         self.__f = f
         self.__argConverters = {} # dict of arg names -> group index
-        self.__schema = None
         self.__validators = {}
-        self.__mandatory = getMandatoryArgumentNames(f)[1:]
+        self.__mandatory = getMandatoryArgumentNames(f)[2:]
         
         #parse URL into regex used for matching
         m = RequestRouter.__urlMatcher.findall(url)
@@ -57,10 +58,13 @@ class RequestRouter:
         return self.__cache    
 
     @property
-    def schema(self):
-        ''''Returns the formencode Schema, if this URL uses custom validation schema'''
-        return self.__schema   
-        
+    def methods(self):
+        return self.__methods
+    
+    @property
+    def url(self):
+        return self.__url
+
     def addValidator(self,fieldName,validator):
         '''Adds additional field-specific formencode validators'''
         self.__validators[fieldName] = validator
@@ -83,12 +87,12 @@ class RequestRouter:
         else:
             return None
         
-    def call(self,request,**kwargs):
+    def call(self,instance,request,**kwargs):
         '''Forwards call to underlying method'''
         for arg in self.__mandatory:
             if arg not in kwargs:
                 raise TypeError("Missing mandatory argument '%s'" % arg)
-        return self.__f(request,**kwargs)
+        return self.__f(instance,request,**kwargs)
 
 class CachedUrl():
     '''
@@ -113,7 +117,7 @@ class CorePost(Resource):
     '''
     isLeaf = True
     
-    def __init__(self,path='',schema=None):
+    def __init__(self,schema=None):
         '''
         Constructor
         '''
@@ -122,12 +126,21 @@ class CorePost(Resource):
         self.__cachedUrls = defaultdict(dict)
         self.__methods = {}
         self.__routers = {}
-        self.__path = path
         self.__schema = schema
+        self.__registerRouters()
 
     @property
     def path(self):
         return self.__path    
+
+    def __registerRouters(self):
+        from types import FunctionType
+        for _,func in self.__class__.__dict__.iteritems():
+            if type(func) == FunctionType and hasattr(func,'corepostRequestRouter'):
+                rq = func.corepostRequestRouter
+                for method in rq.methods:
+                    self.__urls[method][rq.url] = rq
+                    self.__routers[func] = rq # needed so that we can lookup the router for a specific function
 
     def __registerFunction(self,f,url,methods,accepts,produces,cache):
         if f not in self.__methods.values():
@@ -142,11 +155,8 @@ class CorePost(Resource):
             self.__methods[url] = f
 
     def route(self,url,methods=(Http.GET,),accepts=MediaType.WILDCARD,produces=None,cache=True):
-        """Main decorator for registering REST functions """
-        def wrap(f,*args,**kwargs):
-            self.__registerFunction(f, url, methods, accepts, produces,cache)
-            return f
-        return wrap
+        '''Obsolete'''
+        raise RuntimeError("Do not @app.route() any more, as of 0.0.6 API has been re-designed around class methods, see docs and examples")
 
     def render_GET(self,request):
         """ Handles all GET requests """
@@ -202,7 +212,7 @@ class CorePost(Resource):
  
             #handle Deferreds natively
             try:
-                val = urlrouter.call(request,**allargs)
+                val = urlrouter.call(self,request,**allargs)
             
                 if isinstance(val,defer.Deferred):
                     # we assume the method will call request.finish()
@@ -243,6 +253,20 @@ class CorePost(Resource):
 # DECORATORS
 #
 ##################################################################################################    
+
+def route(url,methods=(Http.GET,),accepts=MediaType.WILDCARD,produces=None,cache=True):
+    '''
+    Main decorator for registering REST functions
+    '''
+    def decorator(f):
+        def wrap(*args,**kwargs):
+            return f
+        router = RequestRouter(f, url, methods, accepts, produces, cache)
+        setattr(wrap,'corepostRequestRouter',router)
+        
+        return wrap
+    return decorator
+
     
 def validate(schema=None,**vKwargs):
     '''
