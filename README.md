@@ -149,7 +149,7 @@ If you want a deferred async method, just complete the request yourself, instead
 
 	@route("/",Http.GET)
 	@defer.inlineCallbacks
-	def root(request,**kwargs):
+	def root(self,request,**kwargs):
 		val = yield db.query("SELECT ....")
 		request.write(val)
 		request.finish()
