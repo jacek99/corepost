@@ -11,6 +11,10 @@ class Http:
     PUT = "PUT"
     DELETE = "DELETE"
 
+class HttpHeader:
+    """Enumerates common HTTP headers"""
+    CONTENT_TYPE = "content-type"
+
 class MediaType:
     """Enumerates media types"""    
     WILDCARD = "*/*"
@@ -25,3 +29,4 @@ class MediaType:
     TEXT_PLAIN = "text/plain"
     TEXT_XML = "text/xml"
     TEXT_HTML = "text/html"
+    TEXT_YAML = "text/yaml"

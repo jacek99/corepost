@@ -3,7 +3,7 @@ Stand-alone security module with support for role-based authorization and IP add
 @author: jacekf
 '''
 
-from IPy import IP
+#from IPy import IP
 
 class SecurityRole:
     '''Represents a security role'''

@@ -4,7 +4,7 @@ Main server classes
 @author: jacekf
 '''
 from collections import defaultdict
-from corepost.enums import Http
+from corepost.enums import Http, HttpHeader
 from corepost.utils import getMandatoryArgumentNames
 from enums import MediaType
 from formencode import FancyValidator, Invalid
@@ -12,10 +12,9 @@ from twisted.internet import reactor, defer
 from twisted.web.http import parse_qs
 from twisted.web.resource import Resource
 from twisted.web.server import Site, NOT_DONE_YET
-import re
-import copy
-import exceptions
-    
+import re, copy, exceptions, json
+from xml.etree import ElementTree
+
 class RequestRouter:
     ''' Common class for containing info related to routing a request to a function '''
     
@@ -208,7 +207,7 @@ class CorePost(Resource):
                     allargs[arg] = requestargs[arg][0]
                     
             # if POST/PUT, check if we need to automatically parse JSON
-            # TODO
+            self.__parseRequestData(request)
  
             #handle Deferreds natively
             try:
@@ -240,6 +239,20 @@ class CorePost(Resource):
         request.setResponseCode(code)
         request.setHeader("content-type", MediaType.TEXT_PLAIN)
         return message
+ 
+    def __parseRequestData(self,request):
+        '''Automatically parses JSON,XML,YAML if present'''
+        if HttpHeader.CONTENT_TYPE in request.headers.keys():
+            type = request.headers["content-type"]
+            if type == MediaType.APPLICATION_JSON:
+                request.json = json.loads(request.content.read())
+                pass
+            elif type in (MediaType.APPLICATION_XML,MediaType.TEXT_XML):
+                request.xml = ElementTree.XML(request.content.read())
+                pass
+            elif type == MediaType.TEXT_YAML:
+                #TODO: parse YAML
+                pass
     
     def run(self,port=8080):
         """Shortcut for running app within Twisted reactor"""
