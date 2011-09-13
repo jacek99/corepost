@@ -13,6 +13,8 @@ from corepost.test.arguments import run_app_arguments
 
 apps = {'home_resource' : run_app_home,'multi_resource':run_app_multi,'arguments':run_app_arguments}
 
+NULL = 'None'
+
 def as_dict(parameters):
     dict_val = {}
     for pair in parameters.split('&') : 
@@ -74,6 +76,11 @@ def when_as_user_i_send_post_put_xml_json_to_url(payload,user,password,method,ur
     scc.http_headers['Content-type'] = 'application/json' if request_type == "JSON" else 'text/xml'
     scc.response, scc.content = h.request(url, method, payload, headers = scc.http_headers)
 
+@When("I prepare HTTP header '(.*)' = '(.*)'")
+def when_i_define_http_header_with_value(header,value):
+    if header != NULL:
+        scc.http_headers[header] = value
+
 ##################################
 # THEN
 ##################################
@@ -95,4 +102,11 @@ def then_check_http_header_matches(header,regex):
     assert_true(re.search(regex,scc.response[header.lower()], re.X | re.I) != None, 
                 "the regex %s does not match the response\n%s" % (regex, scc.response[header.lower()])) 
 
+@Then("^I expect JSON content\s*$")
+def then_i_expect_json(content):
+    expected_json = json.loads(content) 
+    expected_json_sorted = json.dumps(expected_json,sort_keys=True,indent=4)
+    received_json = json.loads(scc.content)
+    received_json_sorted = json.dumps(received_json,sort_keys=True,indent=4)
+    assert_equals(expected_json_sorted,received_json_sorted,"Expected JSON\n%s\n*** actual ****\n%s" % (expected_json_sorted,received_json_sorted))
 

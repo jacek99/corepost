@@ -6,6 +6,7 @@ Server tests
 from corepost.web import CorePost, route
 from corepost.enums import Http
 from twisted.internet import defer
+import json
 
 class HomeApp(CorePost):
     
@@ -39,6 +40,14 @@ class HomeApp(CorePost):
     @route("/delete",Http.DELETE)
     def test_delete(self,request,**kwargs):
         return "%s" % kwargs
+    
+    @route("/post/json",(Http.POST,Http.PUT))
+    def test_json(self,request,**kwargs):
+        return "%s" % json.dumps(request.json)
+
+    @route("/post/xml",(Http.POST,Http.PUT))
+    def test_xml(self,request,**kwargs):
+        return "%s" % request.xml
 
 def run_app_home():
     app = HomeApp()

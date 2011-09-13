@@ -197,7 +197,8 @@ class CorePost(Resource):
             # handler for weird Twisted logic where PUT does not get form params
             # see: http://twistedmatrix.com/pipermail/twisted-web/2007-March/003338.html
             requestargs = request.args
-            if request.method == Http.PUT:
+            if request.method == Http.PUT and HttpHeader.CONTENT_TYPE in request.received_headers.keys() \
+                and request.received_headers[HttpHeader.CONTENT_TYPE] == MediaType.APPLICATION_FORM_URLENCODED:
                 requestargs = parse_qs(request.content.read(), 1)
 
             #merge form args
@@ -242,14 +243,12 @@ class CorePost(Resource):
  
     def __parseRequestData(self,request):
         '''Automatically parses JSON,XML,YAML if present'''
-        if HttpHeader.CONTENT_TYPE in request.headers.keys():
-            type = request.headers["content-type"]
+        if HttpHeader.CONTENT_TYPE in request.received_headers.keys():
+            type = request.received_headers["content-type"]
             if type == MediaType.APPLICATION_JSON:
                 request.json = json.loads(request.content.read())
-                pass
             elif type in (MediaType.APPLICATION_XML,MediaType.TEXT_XML):
                 request.xml = ElementTree.XML(request.content.read())
-                pass
             elif type == MediaType.TEXT_YAML:
                 #TODO: parse YAML
                 pass
