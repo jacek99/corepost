@@ -83,6 +83,7 @@ setup(
          'httplib2>=0.7.1',
          'freshen>=0.2',
          'formencode>=1.2.4',
+         'pyyaml>=3.1.0',
     ],
       
 )

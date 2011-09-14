@@ -33,11 +33,80 @@ Feature: Content types
 		"""
 		Then I expect HTTP code <code>
 		# ElementTree object
-		And I expect content contains '<Element 'root' at'
+		And I expect content contains '<root><test>TEST</test><test2>Yo</test2></root>'
 		
 		Examples:
 			| method	| code	|
 			| POST		| 201	|
 			| PUT		| 200	|
 			
-			
+	@yaml
+	Scenario Outline: Parse incoming YAML data
+		Given 'home_resource' is running
+		When as user 'None:None' I <method> 'http://127.0.0.1:8080/post/yaml' with YAML
+		"""
+invoice: 34843
+date   : 2001-01-23
+bill-to: &id001
+    given  : Chris
+    family : Dumars
+    address:
+        lines: |
+            458 Walkman Dr.
+            Suite #292
+        city    : Royal Oak
+        state   : MI
+        postal  : 48046
+ship-to: *id001
+product:
+    - sku         : BL394D
+      quantity    : 4
+      description : Basketball
+      price       : 450.00
+    - sku         : BL4438H
+      quantity    : 1
+      description : Super Hoop
+      price       : 2392.00
+tax  : 251.42
+total: 4443.52
+comments: >
+    Late afternoon is best.
+    Backup contact is Nancy
+    Billsmer @ 338-4338.
+		"""
+		Then I expect HTTP code <code>
+		And I expect content contains
+"""
+bill-to: &id001
+    address:
+        city: Royal Oak
+        lines: '458 Walkman Dr.
+
+            Suite #292
+
+            '
+        postal: 48046
+        state: MI
+    family: Dumars
+    given: Chris
+comments: Late afternoon is best. Backup contact is Nancy Billsmer @ 338-4338.
+date: 2001-01-23
+invoice: 34843
+product:
+-   description: Basketball
+    price: 450.0
+    quantity: 4
+    sku: BL394D
+-   description: Super Hoop
+    price: 2392.0
+    quantity: 1
+    sku: BL4438H
+ship-to: *id001
+tax: 251.42
+total: 4443.52
+"""
+		
+		Examples:
+			| method	| code	|
+			| POST		| 201	|
+			| PUT		| 200	|			

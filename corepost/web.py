@@ -12,8 +12,10 @@ from twisted.internet import reactor, defer
 from twisted.web.http import parse_qs
 from twisted.web.resource import Resource
 from twisted.web.server import Site, NOT_DONE_YET
-import re, copy, exceptions, json
+import re, copy, exceptions, json, yaml
 from xml.etree import ElementTree
+
+
 
 class RequestRouter:
     ''' Common class for containing info related to routing a request to a function '''
@@ -230,7 +232,7 @@ class CorePost(Resource):
             except exceptions.TypeError as ex:
                 return self.__renderError(request,400,"%s" % ex)
             except Exception as ex:
-                return self.__renderError(request,500,"Unexpected server error: %s" % type(ex))                
+                return self.__renderError(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))                
             
         else:
             return self.__renderError(request,404,"URL '%s' not found\n" % request.path)
@@ -250,9 +252,8 @@ class CorePost(Resource):
             elif type in (MediaType.APPLICATION_XML,MediaType.TEXT_XML):
                 request.xml = ElementTree.XML(request.content.read())
             elif type == MediaType.TEXT_YAML:
-                #TODO: parse YAML
-                pass
-    
+                request.yaml = yaml.safe_load(request.content.read())
+                
     def run(self,port=8080):
         """Shortcut for running app within Twisted reactor"""
         factory = Site(self)

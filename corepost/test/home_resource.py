@@ -6,7 +6,8 @@ Server tests
 from corepost.web import CorePost, route
 from corepost.enums import Http
 from twisted.internet import defer
-import json
+from xml.etree import ElementTree
+import json, yaml
 
 class HomeApp(CorePost):
     
@@ -47,7 +48,12 @@ class HomeApp(CorePost):
 
     @route("/post/xml",(Http.POST,Http.PUT))
     def test_xml(self,request,**kwargs):
-        return "%s" % request.xml
+        return "%s" % ElementTree.tostring(request.xml)
+
+    @route("/post/yaml",(Http.POST,Http.PUT))
+    def test_yaml(self,request,**kwargs):
+        return "%s" % yaml.dump(request.yaml,indent=4,width=130,default_flow_style=False)
+
 
 def run_app_home():
     app = HomeApp()
