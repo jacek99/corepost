@@ -208,14 +208,14 @@ class CorePost(Resource):
                 # maintain first instance of an argument always
                 if arg not in allargs:
                     allargs[arg] = requestargs[arg][0]
-                    
-            # if POST/PUT, check if we need to automatically parse JSON
-            self.__parseRequestData(request)
- 
-            #handle Deferreds natively
+            
             try:
+                # if POST/PUT, check if we need to automatically parse JSON
+                self.__parseRequestData(request)
+   
                 val = urlrouter.call(self,request,**allargs)
             
+                #handle Deferreds natively
                 if isinstance(val,defer.Deferred):
                     # we assume the method will call request.finish()
                     return NOT_DONE_YET
@@ -245,14 +245,23 @@ class CorePost(Resource):
  
     def __parseRequestData(self,request):
         '''Automatically parses JSON,XML,YAML if present'''
-        if HttpHeader.CONTENT_TYPE in request.received_headers.keys():
+        if request.method in (Http.POST,Http.PUT) and HttpHeader.CONTENT_TYPE in request.received_headers.keys():
             type = request.received_headers["content-type"]
             if type == MediaType.APPLICATION_JSON:
-                request.json = json.loads(request.content.read())
+                try:
+                    request.json = json.loads(request.content.read())
+                except Exception as ex:
+                    raise TypeError("Unable to parse JSON body: %s" % ex)
             elif type in (MediaType.APPLICATION_XML,MediaType.TEXT_XML):
-                request.xml = ElementTree.XML(request.content.read())
+                try: 
+                    request.xml = ElementTree.XML(request.content.read())
+                except Exception as ex:
+                    raise TypeError("Unable to parse XML body: %s" % ex)
             elif type == MediaType.TEXT_YAML:
-                request.yaml = yaml.safe_load(request.content.read())
+                try: 
+                    request.yaml = yaml.safe_load(request.content.read())
+                except Exception as ex:
+                    raise TypeError("Unable to parse YAML body: %s" % ex)
                 
     def run(self,port=8080):
         """Shortcut for running app within Twisted reactor"""

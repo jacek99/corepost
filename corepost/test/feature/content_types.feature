@@ -24,6 +24,21 @@ Feature: Content types
 			| POST		| 201	|
 			| PUT		| 200	|
 
+	@json
+	Scenario Outline: Handle invalid incoming JSON data
+		Given 'home_resource' is running
+		When as user 'None:None' I <method> 'http://127.0.0.1:8080/post/json' with JSON
+		"""
+		wrong_json
+		"""
+		Then I expect HTTP code 400
+		And I expect content contains 'Unable to parse JSON body: No JSON object could be decoded'
+		
+		Examples:
+			| method	| 
+			| POST		| 
+			| PUT		| 
+
 	@xml
 	Scenario Outline: Parse incoming XML data
 		Given 'home_resource' is running
@@ -39,6 +54,22 @@ Feature: Content types
 			| method	| code	|
 			| POST		| 201	|
 			| PUT		| 200	|
+
+	@xml
+	Scenario Outline: Handle invalid XML data
+		Given 'home_resource' is running
+		When as user 'None:None' I <method> 'http://127.0.0.1:8080/post/xml' with XML
+		"""
+		wrong xml
+		"""
+		Then I expect HTTP code 400
+		And I expect content contains 'Unable to parse XML body: syntax error: line 1, column 0'
+		
+		Examples:
+			| method	| 
+			| POST		| 
+			| PUT		| 
+
 			
 	@yaml
 	Scenario Outline: Parse incoming YAML data
@@ -110,3 +141,19 @@ total: 4443.52
 			| method	| code	|
 			| POST		| 201	|
 			| PUT		| 200	|			
+			
+	@yaml
+	Scenario Outline: Handle invalid YAML data
+		Given 'home_resource' is running
+		When as user 'None:None' I <method> 'http://127.0.0.1:8080/post/yaml' with YAML
+		"""
+- test
+{test}
+		"""
+		Then I expect HTTP code 400
+		And I expect content contains 'Unable to parse YAML body: while scanning a simple key'
+		
+		Examples:
+			| method	| 
+			| POST		| 
+			| PUT		| 			

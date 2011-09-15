@@ -5,7 +5,7 @@ Common Freshen BDD steps
 '''
 from multiprocessing import Process
 import httplib2, json, re, time
-from freshen import Before, After, Given, When, Then, scc, glc, assert_equals, assert_true #@UnresolvedImport
+from freshen import Before, Given, When, Then, scc, glc, assert_equals, assert_true #@UnresolvedImport
 from urllib import urlencode
 from corepost.test.home_resource import run_app_home
 from corepost.test.multi_resource import run_app_multi
