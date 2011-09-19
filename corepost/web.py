@@ -143,18 +143,6 @@ class CorePost(Resource):
                     self.__urls[method][rq.url] = rq
                     self.__routers[func] = rq # needed so that we can lookup the router for a specific function
 
-    def __registerFunction(self,f,url,methods,accepts,produces,cache):
-        if f not in self.__methods.values():
-            if not isinstance(methods,(list,tuple)):
-                methods = (methods,)
-
-            for method in methods:
-                rq = RequestRouter(f, url, method, accepts, produces,cache)
-                self.__urls[method][url] = rq
-                self.__routers[f] = rq # needed so that we can lookup the router for a specific function
-            
-            self.__methods[url] = f
-
     def route(self,url,methods=(Http.GET,),accepts=MediaType.WILDCARD,produces=None,cache=True):
         '''Obsolete'''
         raise RuntimeError("Do not @app.route() any more, as of 0.0.6 API has been re-designed around class methods, see docs and examples")
