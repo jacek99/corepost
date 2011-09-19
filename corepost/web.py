@@ -125,7 +125,6 @@ class CorePost(Resource):
         Resource.__init__(self)
         self.__urls = defaultdict(dict)
         self.__cachedUrls = defaultdict(dict)
-        self.__methods = {}
         self.__routers = {}
         self.__schema = schema
         self.__registerRouters()
