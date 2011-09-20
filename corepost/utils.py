@@ -11,3 +11,6 @@ def getMandatoryArgumentNames(f):
     else:
         return args[0:len(args) - len(defaults)]
     
+def getRouterKey(method,url):
+    '''Returns the common key used to represent a function that a request can be routed to'''
+    return "%s %s" % (method,url)

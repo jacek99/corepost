@@ -6,9 +6,11 @@ Feature: Content types
 	correctly parse/generate
 	JSON/XML/YAML based on content types
 
+	Background:
+		Given 'home_resource' is running
+
 	@json
 	Scenario Outline: Parse incoming JSON data
-		Given 'home_resource' is running
 		When as user 'None:None' I <method> 'http://127.0.0.1:8080/post/json' with JSON
 		"""
 		{"test":"test2"}
@@ -26,7 +28,6 @@ Feature: Content types
 
 	@json
 	Scenario Outline: Handle invalid incoming JSON data
-		Given 'home_resource' is running
 		When as user 'None:None' I <method> 'http://127.0.0.1:8080/post/json' with JSON
 		"""
 		wrong_json
@@ -41,7 +42,6 @@ Feature: Content types
 
 	@xml
 	Scenario Outline: Parse incoming XML data
-		Given 'home_resource' is running
 		When as user 'None:None' I <method> 'http://127.0.0.1:8080/post/xml' with XML
 		"""
 		<root><test>TEST</test><test2>Yo</test2></root>
@@ -57,7 +57,6 @@ Feature: Content types
 
 	@xml
 	Scenario Outline: Handle invalid XML data
-		Given 'home_resource' is running
 		When as user 'None:None' I <method> 'http://127.0.0.1:8080/post/xml' with XML
 		"""
 		wrong xml
@@ -73,7 +72,6 @@ Feature: Content types
 			
 	@yaml
 	Scenario Outline: Parse incoming YAML data
-		Given 'home_resource' is running
 		When as user 'None:None' I <method> 'http://127.0.0.1:8080/post/yaml' with YAML
 		"""
 invoice: 34843
@@ -144,7 +142,6 @@ total: 4443.52
 			
 	@yaml
 	Scenario Outline: Handle invalid YAML data
-		Given 'home_resource' is running
 		When as user 'None:None' I <method> 'http://127.0.0.1:8080/post/yaml' with YAML
 		"""
 - test
@@ -156,4 +153,23 @@ total: 4443.52
 		Examples:
 			| method	| 
 			| POST		| 
-			| PUT		| 			
+			| PUT		| 		
+			
+	@json @yaml @xml @route_content_type
+	Scenario Outline: Route by incoming content type
+		When I prepare HTTP header 'content-type' = '<content>'
+		When as user 'None:None' I <method> 'http://127.0.0.1:8080/post/by/content' with <type> body '<body>'
+		Then I expect HTTP code <code>
+		And I expect content contains '<content>'
+		
+		Examples:
+			| method	| type		| body				| content				| code	| 
+			| POST		| JSON		| {"test":2}		| application/json	 	| 201	|
+			| POST		| XML		| <test>1</test>	| application/xml	 	| 201	|
+			| POST		| XML		| <test>1</test>	| text/xml			 	| 201	|
+			| POST		| YAML		| test: 2			| text/yaml			 	| 201	|
+			| PUT		| JSON		| {"test":2}		| application/json	 	| 200	|
+			| PUT		| XML		| <test>1</test>	| text/xml			 	| 200	|
+			| PUT		| XML		| <test>1</test>	| application/xml	 	| 200	|
+			| PUT		| YAML		| test: 2			| text/yaml			 	| 200	|
+			

@@ -68,8 +68,12 @@ def when_as_user_i_send_post_put_to_url(user,password,method,url,params):
     scc.http_headers['Content-type'] = 'application/x-www-form-urlencoded'
     scc.response, scc.content = h.request(url, method, urlencode(as_dict(params)), headers = scc.http_headers)
 
+@When(r"^as user '(.+):(.+)' I (POST|PUT) '(.+)' with (XML|JSON|YAML) body '(.+)'\s*$")
+def when_as_user_i_send_post_put_xml_json_to_url(user,password,method,url,request_type,body):
+    when_as_user_i_send_post_put_xml_json_to_url_multiline(body,user,password,method,url,request_type)
+
 @When(r"^as user '(.+):(.+)' I (POST|PUT) '(.+)' with (XML|JSON|YAML)\s*$")
-def when_as_user_i_send_post_put_xml_json_to_url(payload,user,password,method,url,request_type):
+def when_as_user_i_send_post_put_xml_json_to_url_multiline(body,user,password,method,url,request_type):
     h = httplib2.Http()
     h.follow_redirects = False
     h.add_credentials(user, password)
@@ -79,7 +83,7 @@ def when_as_user_i_send_post_put_xml_json_to_url(payload,user,password,method,ur
         scc.http_headers['Content-type'] = 'text/xml'
     elif request_type == "YAML":
         scc.http_headers['Content-type'] = 'text/yaml'        
-    scc.response, scc.content = h.request(url, method, payload, headers = scc.http_headers)
+    scc.response, scc.content = h.request(url, method, body, headers = scc.http_headers)
 
 @When("I prepare HTTP header '(.*)' = '(.*)'")
 def when_i_define_http_header_with_value(header,value):

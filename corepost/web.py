@@ -27,7 +27,7 @@ class RequestRouter:
     def __init__(self,f,url,methods,accepts,produces,cache):
         self.__url = url
         self.__methods = methods if isinstance(methods,tuple) else (methods,)
-        self.__accepts = accepts
+        self.__accepts = accepts if isinstance(accepts,tuple) else (accepts,)
         self.__produces = produces
         self.__cache = cache
         self.__f = f
@@ -65,6 +65,10 @@ class RequestRouter:
     @property
     def url(self):
         return self.__url
+
+    @property
+    def accepts(self):
+        return self.__accepts
 
     def addValidator(self,fieldName,validator):
         '''Adds additional field-specific formencode validators'''
@@ -123,8 +127,8 @@ class CorePost(Resource):
         Constructor
         '''
         Resource.__init__(self)
-        self.__urls = defaultdict(dict)
-        self.__cachedUrls = defaultdict(dict)
+        self.__urls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict)}
+        self.__cachedUrls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict)}
         self.__routers = {}
         self.__schema = schema
         self.__registerRouters()
@@ -139,8 +143,9 @@ class CorePost(Resource):
             if type(func) == FunctionType and hasattr(func,'corepostRequestRouter'):
                 rq = func.corepostRequestRouter
                 for method in rq.methods:
-                    self.__urls[method][rq.url] = rq
-                    self.__routers[func] = rq # needed so that we can lookup the router for a specific function
+                    for accepts in rq.accepts:
+                        self.__urls[method][rq.url][accepts] = rq
+                        self.__routers[func] = rq # needed so that we can lookup the router for a specific function
 
     def route(self,url,methods=(Http.GET,),accepts=MediaType.WILDCARD,produces=None,cache=True):
         '''Obsolete'''
@@ -165,64 +170,83 @@ class CorePost(Resource):
     def __renderUrl(self,request):
         """Finds the appropriate router and dispatches the request to the registered function"""
         # see if already cached
-        path = '/' + '/'.join(request.postpath)
-                
-        urlrouter, pathargs = None, None
-        if path in self.__cachedUrls[request.method]:
-            cachedUrl = self.__cachedUrls[request.method][path]
-            urlrouter,pathargs = cachedUrl.router, cachedUrl.args 
-        else:
-            # first time this URL is called
-            for router in self.__urls[request.method].values():
-                args = router.getArguments(path)
-                if args != None:
-                    if router.cache:
-                        self.__cachedUrls[request.method][path] = CachedUrl(router, args)
-                    urlrouter,pathargs = router,args
+        try:
+            path = '/' + '/'.join(request.postpath)
+            contentType =  MediaType.WILDCARD if HttpHeader.CONTENT_TYPE not in request.received_headers else request.received_headers[HttpHeader.CONTENT_TYPE]       
                     
-        #actual call
-        if urlrouter != None and pathargs != None:
-            allargs = copy.deepcopy(pathargs)
-            # handler for weird Twisted logic where PUT does not get form params
-            # see: http://twistedmatrix.com/pipermail/twisted-web/2007-March/003338.html
-            requestargs = request.args
-            if request.method == Http.PUT and HttpHeader.CONTENT_TYPE in request.received_headers.keys() \
-                and request.received_headers[HttpHeader.CONTENT_TYPE] == MediaType.APPLICATION_FORM_URLENCODED:
-                requestargs = parse_qs(request.content.read(), 1)
+            urlrouter, pathargs = None, None
+            # fetch URL arguments <-> function from cache if hit at least once before
+            if contentType in self.__cachedUrls[request.method][path]:
+                cachedUrl = self.__cachedUrls[request.method][path][contentType]
+                urlrouter,pathargs = cachedUrl.router, cachedUrl.args 
+            else:
+                # first time this URL is called
+                router = None
 
-            #merge form args
-            for arg in requestargs.keys():
-                # maintain first instance of an argument always
-                if arg not in allargs:
-                    allargs[arg] = requestargs[arg][0]
-            
-            try:
-                # if POST/PUT, check if we need to automatically parse JSON
-                self.__parseRequestData(request)
-   
-                val = urlrouter.call(self,request,**allargs)
-            
-                #handle Deferreds natively
-                if isinstance(val,defer.Deferred):
-                    # we assume the method will call request.finish()
-                    return NOT_DONE_YET
-                else:
-                    #special logic for POST to return 201 (created)
-                    if request.method == Http.POST:
-                        if hasattr(request, 'code'):
-                            if request.code == 200:
+                for contentTypeFunctions in self.__urls[request.method].values():
+
+                    if contentType in contentTypeFunctions:
+                        # there is an exact function for this incoming content type
+                        router = contentTypeFunctions[contentType]
+                    elif MediaType.WILDCARD in contentTypeFunctions:
+                        # fall back to any wildcard method
+                        router = contentTypeFunctions[MediaType.WILDCARD]
+                   
+                    if router != None:   
+                        # see if the path arguments match up against any function @route definition
+                        args = router.getArguments(path)
+                        if args != None:
+                            if router.cache:
+                                self.__cachedUrls[request.method][path][contentType] = CachedUrl(router, args)
+                            urlrouter,pathargs = router,args
+                            break
+                        
+            #actual call
+            if urlrouter != None and pathargs != None:
+                allargs = copy.deepcopy(pathargs)
+                # handler for weird Twisted logic where PUT does not get form params
+                # see: http://twistedmatrix.com/pipermail/twisted-web/2007-March/003338.html
+                requestargs = request.args
+                if request.method == Http.PUT and HttpHeader.CONTENT_TYPE in request.received_headers.keys() \
+                    and request.received_headers[HttpHeader.CONTENT_TYPE] == MediaType.APPLICATION_FORM_URLENCODED:
+                    requestargs = parse_qs(request.content.read(), 1)
+    
+                #merge form args
+                for arg in requestargs.keys():
+                    # maintain first instance of an argument always
+                    if arg not in allargs:
+                        allargs[arg] = requestargs[arg][0]
+                
+                try:
+                    # if POST/PUT, check if we need to automatically parse JSON
+                    self.__parseRequestData(request)
+       
+                    val = urlrouter.call(self,request,**allargs)
+                
+                    #handle Deferreds natively
+                    if isinstance(val,defer.Deferred):
+                        # we assume the method will call request.finish()
+                        return NOT_DONE_YET
+                    else:
+                        #special logic for POST to return 201 (created)
+                        if request.method == Http.POST:
+                            if hasattr(request, 'code'):
+                                if request.code == 200:
+                                    request.setResponseCode(201)
+                            else:
                                 request.setResponseCode(201)
-                        else:
-                            request.setResponseCode(201)
-                    
-                    return val
-            except exceptions.TypeError as ex:
-                return self.__renderError(request,400,"%s" % ex)
-            except Exception as ex:
-                return self.__renderError(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))                
-            
-        else:
-            return self.__renderError(request,404,"URL '%s' not found\n" % request.path)
+                        
+                        return val
+                except exceptions.TypeError as ex:
+                    return self.__renderError(request,400,"%s" % ex)
+                except Exception as ex:
+                    return self.__renderError(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))                
+                
+            else:
+                return self.__renderError(request,404,"URL '%s' not found\n" % request.path)
+        
+        except Exception as ex:
+            return self.__renderError(request,500,"Internal server error: %s" % ex)
     
     def __renderError(self,request,code,message):
         """Common method for rendering errors"""

@@ -4,7 +4,7 @@ Server tests
 '''
 
 from corepost.web import CorePost, route
-from corepost.enums import Http
+from corepost.enums import Http, MediaType, HttpHeader
 from twisted.internet import defer
 from xml.etree import ElementTree
 import json, yaml
@@ -53,6 +53,25 @@ class HomeApp(CorePost):
     @route("/post/yaml",(Http.POST,Http.PUT))
     def test_yaml(self,request,**kwargs):
         return "%s" % yaml.dump(request.yaml,indent=4,width=130,default_flow_style=False)
+
+    ##################################################################
+    # same URLs, routed by incoming content type
+    ###################################################################
+    @route("/post/by/content",(Http.POST,Http.PUT),MediaType.APPLICATION_JSON)
+    def test_content_app_json(self,request,**kwargs):
+        return request.received_headers[HttpHeader.CONTENT_TYPE]
+
+    @route("/post/by/content",(Http.POST,Http.PUT),(MediaType.TEXT_XML,MediaType.APPLICATION_XML))
+    def test_content_xml(self,request,**kwargs):
+        return request.received_headers[HttpHeader.CONTENT_TYPE]
+
+    @route("/post/by/content",(Http.POST,Http.PUT),MediaType.TEXT_YAML)
+    def test_content_yaml(self,request,**kwargs):
+        return request.received_headers[HttpHeader.CONTENT_TYPE]
+
+    @route("/post/by/content",(Http.POST,Http.PUT))
+    def test_content_catch_all(self,request,**kwargs):
+        return MediaType.WILDCARD
 
 
 def run_app_home():
