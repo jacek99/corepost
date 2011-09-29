@@ -4,7 +4,7 @@ Common Freshen BDD steps
 @author: jacekf
 '''
 from multiprocessing import Process
-import httplib2, json, re, time
+import httplib2, json, re, time, string
 from freshen import Before, Given, When, Then, scc, glc, assert_equals, assert_true #@UnresolvedImport
 from urllib import urlencode
 from corepost.test.home_resource import run_app_home
@@ -58,7 +58,7 @@ def when_as_user_i_send_get_delete_to_url(user,password,method,url):
     h = httplib2.Http()
     h.follow_redirects = False
     h.add_credentials(user, password)
-    scc.response, scc.content = h.request(url, method)
+    scc.response, scc.content = h.request(url, method, headers = scc.http_headers)
 
 @When(r"^as user '(.+):(.+)' I (POST|PUT) '(.+)' with '(.+)'\s*$")
 def when_as_user_i_send_post_put_to_url(user,password,method,url,params):
@@ -93,6 +93,12 @@ def when_i_define_http_header_with_value(header,value):
 ##################################
 # THEN
 ##################################
+def transform_content(content):
+    """Support embedded newlines"""
+    if content != None:
+        return string.replace(content,"\\n","\n")
+    else:
+        return None
 
 @Then(r"^I expect HTTP code (\d+)\s*$")
 def expect_http_code(code):
@@ -100,10 +106,12 @@ def expect_http_code(code):
 
 @Then(r"^I expect content contains '(.+)'\s*$")
 def expect_content(content):
+    content = transform_content(content)
     assert_true(scc.content.find(content) >= 0,"Did not find:\n%s\nin content:\n%s" % (content,scc.content)) 
 
 @Then(r"^I expect content contains\s*$")
 def expect_content_multiline(content):
+    content = transform_content(content)
     assert_true(scc.content.find(content) >= 0,"Did not find:\n%s\nin content:\n%s" % (content,scc.content)) 
 
 @Then(r"^I expect '([^']*)' header matches '([^']*)'\s*$")

@@ -5,7 +5,7 @@ Main server classes
 '''
 from collections import defaultdict
 from corepost.enums import Http, HttpHeader
-from corepost.utils import getMandatoryArgumentNames
+from corepost.utils import getMandatoryArgumentNames, convertToJson
 from enums import MediaType
 from formencode import FancyValidator, Invalid
 from twisted.internet import reactor, defer
@@ -14,8 +14,7 @@ from twisted.web.resource import Resource
 from twisted.web.server import Site, NOT_DONE_YET
 import re, copy, exceptions, json, yaml
 from xml.etree import ElementTree
-
-
+from xml.etree.ElementTree import Element
 
 class RequestRouter:
     ''' Common class for containing info related to routing a request to a function '''
@@ -220,12 +219,12 @@ class CorePost(Resource):
                 try:
                     # if POST/PUT, check if we need to automatically parse JSON
                     self.__parseRequestData(request)
-       
                     val = urlrouter.call(self,request,**allargs)
                 
                     #handle Deferreds natively
                     if isinstance(val,defer.Deferred):
-                        # we assume the method will call request.finish()
+                        # add callback to finish the request
+                        val.addCallback(self.__finishDeferred,request)
                         return NOT_DONE_YET
                     else:
                         #special logic for POST to return 201 (created)
@@ -236,7 +235,8 @@ class CorePost(Resource):
                             else:
                                 request.setResponseCode(201)
                         
-                        return val
+                        return self.__renderResponse(request, val)
+                    
                 except exceptions.TypeError as ex:
                     return self.__renderError(request,400,"%s" % ex)
                 except Exception as ex:
@@ -247,6 +247,56 @@ class CorePost(Resource):
         
         except Exception as ex:
             return self.__renderError(request,500,"Internal server error: %s" % ex)
+    
+    def __renderResponse(self,request,response):
+        """
+        Takes care of automatically rendering the response and converting it to appropriate format (text,XML,JSON,YAML)
+        depending on what the caller can accept
+        """
+        if isinstance(response, str):
+            return response
+        elif isinstance(response, Response):
+            # TODO
+            return "TODO: Response"
+        else:
+            return self.__convertObjectToContentType(request, response)
+
+    def __convertObjectToContentType(self,request,obj):
+        """Takes care of converting an object (non-String) response to the appropriate format, based on the what the caller can accept"""
+        if HttpHeader.ACCEPT in request.received_headers:
+            accept = request.received_headers[HttpHeader.ACCEPT]
+            if MediaType.APPLICATION_JSON in accept:
+                request.headers[HttpHeader.CONTENT_TYPE] = MediaType.APPLICATION_JSON
+                return convertToJson(obj)
+            elif MediaType.TEXT_YAML in accept:
+                request.headers[HttpHeader.CONTENT_TYPE] = MediaType.TEXT_YAML
+                return yaml.dump(obj)
+            elif MediaType.APPLICATION_XML in accept or MediaType.TEXT_XML in accept:
+                if isinstance(obj,Element):
+                    request.headers[HttpHeader.CONTENT_TYPE] = MediaType.APPLICATION_XML
+                    return ElementTree.tostring(obj, encoding='utf-8')
+                else:
+                    raise RuntimeError("Unable to convert String response to XML automatically")
+            else:
+                # no idea, let's do JSON
+                request.headers[HttpHeader.CONTENT_TYPE] = MediaType.APPLICATION_JSON
+                return convertToJson(obj)
+        else:
+            # called has no accept header, let's default to JSON
+            request.headers[HttpHeader.CONTENT_TYPE] = MediaType.APPLICATION_JSON
+            return convertToJson(obj)
+
+    def __finishDeferred(self,val,request):
+        """Finishes any Defered/inlineCallback methods"""
+        if not request.finished:
+            if val != None:
+                try:
+                    request.write(self.__renderResponse(request,val))
+                except Exception as ex:
+                    msg = "Unexpected server error: %s\n%s" % (type(ex),ex)
+                    self.__renderError(request, 500, msg)
+                    request.write(msg)
+            request.finish()
     
     def __renderError(self,request,code,message):
         """Common method for rendering errors"""
@@ -279,7 +329,15 @@ class CorePost(Resource):
         factory = Site(self)
         reactor.listenTCP(port, factory)    #@UndefinedVariable
         reactor.run()                       #@UndefinedVariable
-        
+
+class Response:
+    """
+    Custom response object, can be returned instead of raw string response
+    """
+    def __init__(self,code=200,entity=None,headers={}):
+        self.code = 200
+        self.entity=entity
+        self.headers=headers         
 
 ##################################################################################################
 #

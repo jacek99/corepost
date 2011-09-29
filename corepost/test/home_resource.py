@@ -72,6 +72,33 @@ class HomeApp(CorePost):
     @route("/post/by/content",(Http.POST,Http.PUT))
     def test_content_catch_all(self,request,**kwargs):
         return MediaType.WILDCARD
+    
+    ##################################################################
+    # one URL, serving different content types
+    ###################################################################
+    @route("/return/by/accept")
+    def test_return_content_by_accepts(self,request,**kwargs):
+        val = [{"test1":"Test1"},{"test2":"Test2"}]
+        return val
+
+    @route("/return/by/accept/deferred")
+    @defer.inlineCallbacks
+    def test_return_content_by_accept_deferred(self,request,**kwargs):
+        """Ensure support for inline callbacks and deferred"""
+        val = yield [{"test1":"Test1"},{"test2":"Test2"}]
+        defer.returnValue(val)
+
+    @route("/return/by/accept/class")
+    def test_return_class_content_by_accepts(self,request,**kwargs):
+        """Uses Python class instead of dict/list"""
+        class Test: pass
+        t1 = Test()
+        t1.test1 = "Test1"
+        t2 = Test()
+        t2.test2 = "Test2"
+        val = [t1,t2]
+        return val
+
 
 
 def run_app_home():

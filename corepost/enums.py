@@ -14,6 +14,7 @@ class Http:
 class HttpHeader:
     """Enumerates common HTTP headers"""
     CONTENT_TYPE = "content-type"
+    ACCEPT = "accept"
 
 class MediaType:
     """Enumerates media types"""    
