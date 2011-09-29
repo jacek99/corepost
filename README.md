@@ -162,12 +162,13 @@ CorePost integrates support for JSON, YAML and XML (partially) based on request 
 *Parsing of incoming content*
 
 Based on the incoming content type in POST/PUT requests,
-the body will be automatically parsed to JSON, YAML and XML (ElementTree) and attached to the request:
+the body will be automatically parsed to JSON, YAML and XML (ElementTree)
 
 * request.json
 * request.yaml
 * request.xml
 
+ and attached to the request:
 
 	@route("/post/json",(Http.POST,Http.PUT))
 	def test_json(self,request,**kwargs):
