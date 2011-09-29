@@ -159,8 +159,7 @@ Content types
 
 CorePost integrates support for JSON, YAML and XML (partially) based on request content types.
 
-Parsing of incoming content
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Parsing of incoming content*
 
 Based on the incoming content type in POST/PUT requests,
 the body will be automatically parsed to JSON, YAML and XML (ElementTree) and attached to the request:
@@ -182,8 +181,7 @@ the body will be automatically parsed to JSON, YAML and XML (ElementTree) and at
         return "%s" % yaml.dump(request.yaml)
 
 
-Routing requests by incoming content type
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Routing requests by incoming content type*
 
 Based on the incoming content type in POST/PUT requests,
 the *same* URL can be hooked up to different router methods:
@@ -204,8 +202,7 @@ the *same* URL can be hooked up to different router methods:
     def test_content_catch_all(self,request,**kwargs):
         return MediaType.WILDCARD
 
-Converting Python objects to content type based on what caller can accept
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Converting Python objects to content type based on what caller can accept*
 
 Instead of returning string responses, the code can just return Python objects.
 Depending whether the caller can accept JSON (default) or YAML, the Python objects	    
