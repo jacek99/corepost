@@ -7,6 +7,7 @@ from corepost.web import CorePost, route
 from corepost.enums import Http, MediaType, HttpHeader
 from twisted.internet import defer
 from xml.etree import ElementTree
+from UserDict import UserDict
 import json, yaml
 
 class HomeApp(CorePost):
@@ -86,18 +87,20 @@ class HomeApp(CorePost):
     def test_return_content_by_accept_deferred(self,request,**kwargs):
         """Ensure support for inline callbacks and deferred"""
         val = yield [{"test1":"Test1"},{"test2":"Test2"}]
-        defer.returnValue(val)
+        defer.returnValue(val) 
 
     @route("/return/by/accept/class")
     def test_return_class_content_by_accepts(self,request,**kwargs):
         """Uses Python class instead of dict/list"""
-        class Test: pass
+        class Test(UserDict,dict):
+            pass
+        
         t1 = Test()
-        t1.test1 = "Test1"
+        t1.test1="Test1"
         t2 = Test()
-        t2.test2 = "Test2"
+        t2.test2="Test2"
         val = [t1,t2]
-        return val
+        return (t1,t2)
 
 
 

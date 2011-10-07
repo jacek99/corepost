@@ -186,7 +186,7 @@ total: 4443.52
 			| Unable to convert String response to XML automatically	| application/xml	 	| 500	| # not supported yet
 			| - {test1: Test1}\n- {test2: Test2}						| text/yaml				| 200	|
 			
-	@json @yaml @xml @return_accept_deferred
+	@json @yaml @xml @return_accept_deferred @tmp
 	Scenario Outline: Return content type based on caller's Accept from Deferred methods
 		When I prepare HTTP header 'Accept' = '<accept>'
 		When as user 'None:None' I GET 'http://127.0.0.1:8080/return/by/accept/deferred'
@@ -196,10 +196,10 @@ total: 4443.52
 		Examples:
 			| content													| accept				| code 	|  
 			| [{"test1": "Test1"}, {"test2": "Test2"}]					| application/json	 	| 200	|
-			| Unable to convert String response to XML automatically	| application/xml	 	| 500	| # not supported yet
-			| - {test1: Test1}\n- {test2: Test2}						| text/yaml				| 200	|			
+			#| Unable to convert String response to XML automatically	| application/xml	 	| 500	| # not supported yet
+			#| - {test1: Test1}\n- {test2: Test2}						| text/yaml				| 200	|			
 			
-	@json @yaml @xml @return_accept
+	@json @yaml @xml @return_accept 
 	Scenario Outline: Return class content type based on caller's Accept
 		When I prepare HTTP header 'Accept' = '<accept>'
 		When as user 'None:None' I GET 'http://127.0.0.1:8080/return/by/accept/class'
@@ -208,6 +208,6 @@ total: 4443.52
 		
 		Examples:
 			| content													| accept				| code 	|  
-			| is not JSON serializable									| application/json	 	| 500	| # not supported yet
+			| [{}, {}]													| application/json	 	| 200	| # not supported yet
 			| Unable to convert String response to XML automatically	| application/xml	 	| 500	| # not supported yet
 			

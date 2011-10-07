@@ -3,6 +3,7 @@ Various CorePost utilities
 '''
 from inspect import getargspec
 import json
+from corepost.enums import MediaType
 
 def getMandatoryArgumentNames(f):
     '''Returns a tuple of the mandatory arguments required in a function'''
@@ -22,3 +23,10 @@ def convertToJson(obj):
         return json.dumps(obj)
     except Exception as ex:
         raise RuntimeError(str(ex))
+    
+def applyResponse(self,request,code,headers={"content-type":MediaType.TEXT_PLAIN}):
+    """Applies response to current request"""
+    request.setResponseCode(code)
+    if headers != None:
+        for header,value in headers.iteritems():
+            request.setHeader(header, value)
