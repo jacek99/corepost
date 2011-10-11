@@ -151,7 +151,6 @@ class RequestRouter:
         '''Obsolete'''
         raise RuntimeError("Do not @app.route() any more, as of 0.0.6 API has been re-designed around class methods, see docs and examples")
 
-    @defer.inlineCallbacks
     def getResponse(self,request):
         """Finds the appropriate router and dispatches the request to the registered function. Returns the appropriate Response object"""
         # see if already cached
@@ -211,7 +210,7 @@ class RequestRouter:
                     if isinstance(val,defer.Deferred):
                         # add callback to finish the request
                         val.addCallback(self.__finishDeferred,request)
-                        yield val.callback(request)
+                        return val
                     else:
                         #special logic for POST to return 201 (created)
                         if request.method == Http.POST:
@@ -221,26 +220,26 @@ class RequestRouter:
                             else:
                                 request.setResponseCode(201)
                         
-                        defer.returnValue(self.__renderResponse(request, val))
+                        return self.__generateResponse(request, val, request.code)
                     
                 except exceptions.TypeError as ex:
-                    defer.returnValue(self.__createErrorResponse(request,400,"%s" % ex))
+                    return self.__createErrorResponse(request,400,"%s" % ex)
                 except Exception as ex:
-                    defer.returnValue(self.__createErrorResponse(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex)))                
+                    return self.__createErrorResponse(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))                
                 
             else:
-                defer.returnValue(self.__createErrorResponse(request,404,"URL '%s' not found\n" % request.path))
+                return self.__createErrorResponse(request,404,"URL '%s' not found\n" % request.path)
         
         except Exception as ex:
-            defer.returnValue(self.__createErrorResponse(request,500,"Internal server error: %s" % ex))
+            return self.__createErrorResponse(request,500,"Internal server error: %s" % ex)
     
-    def __renderResponse(self,request,response,code=200):
+    def __generateResponse(self,request,response,code=200):
         """
         Takes care of automatically rendering the response and converting it to appropriate format (text,XML,JSON,YAML)
         depending on what the caller can accept. Returns Response
         """
         if isinstance(response, str):
-            return Response(code,response)
+            return Response(code,response,{HttpHeader.CONTENT_TYPE:MediaType.TEXT_PLAIN})
         elif isinstance(response, Response):
             return response
         else:
@@ -274,12 +273,12 @@ class RequestRouter:
         """Finishes any Defered/inlineCallback methods. Returns Response"""
         if val != None:
             try:
-                defer.returnValue(self.__renderResponse(request,val))
+                return self.__generateResponse(request,val)
             except Exception as ex:
                 msg = "Unexpected server error: %s\n%s" % (type(ex),ex)
-                defer.returnValue(self.__createErrorResponse(request, 500, msg))
+                return self.__createErrorResponse(request, 500, msg)
         else:
-            defer.returnValue(Response(209,None))
+            return Response(209,None)
     
     def __createErrorResponse(self,request,code,message):
         """Common method for rendering errors"""

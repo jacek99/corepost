@@ -51,16 +51,24 @@ class CorePost(Resource):
     def __renderUrl(self,request):
         try:
             val = self.__router.getResponse(request)
-            val.addCallback(self.__finishRequest,request)
-            return NOT_DONE_YET
+            # return can be Deferred or Response
+            if isinstance(val,Deferred):
+                val.addCallback(self.__finishRequest,request)
+                return NOT_DONE_YET
+            elif isinstance(val,Response):
+                self.__applyResponse(request, val.code, val.headers)
+                return val.entity
+            else:
+                raise RuntimeError("Unexpected return type from request router %s" % val)
         except Exception as ex:
             self.__applyResponse(request, 500, None)
             return str(ex)
         
     def __finishRequest(self,response,request):
-        self.__applyResponse(request, response.code,response.headers)
-        request.write(response.entity)
-        request.finish()
+        if not request.finished:
+            self.__applyResponse(request, response.code,response.headers)
+            request.write(response.entity)
+            request.finish()
         
     def __applyResponse(self,request,code,headers={"content-type":MediaType.TEXT_PLAIN}):
         request.setResponseCode(code)
