@@ -40,11 +40,14 @@ Links
 
 Changelog
 `````````
-
-* 0.0.7 - automatic parsing of incoming content (JSON, YAML, XML)
-        - routing by incoming content type
-        - automatic response conversion based on caller's Accept header (JSON/YAML)
-        - support for defer.returnValue() in @inlineCallbacks route methods
+* 0.0.8:
+    - support for serializing of classes to JSON,XML,YAML based on caller's Accept header
+    - separate routing functionality from CorePost Resource object, in preparation for future multicore support
+* 0.0.7:
+    - automatic parsing of incoming content (JSON, YAML, XML)
+    - routing by incoming content type
+    - automatic response conversion based on caller's Accept header (JSON/YAML
+    - support for defer.returnValue() in @inlineCallbacks route methods
 * 0.0.6 - redesigned API around classes and methods, rather than functions and global objects (after feedback from Twisted devs)
 * 0.0.5 - added FormEncode validation for arguments
 * 0.0.4 - path argument extraction, mandatory argument error checking
@@ -84,11 +87,15 @@ setup(
     ],
     install_requires=[
          'twisted>=11.0.0',
-         'httplib2>=0.7.1',
-         'freshen>=0.2',
          'formencode>=1.2.4',
          'pyyaml>=3.1.0',
          'jinja2>=2.6'
     ],
+    tests_require=[
+         'httplib2>=0.7.1',
+         'freshen>=0.2',
+    ],
+    zip_safe = True
+    
       
 )
