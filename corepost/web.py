@@ -51,6 +51,7 @@ class CorePost(Resource):
     def __renderUrl(self,request):
         try:
             val = self.__router.getResponse(request)
+            
             # return can be Deferred or Response
             if isinstance(val,Deferred):
                 val.addCallback(self.__finishRequest,request)

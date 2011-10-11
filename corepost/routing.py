@@ -7,6 +7,7 @@ Common routing classes, regardless of whether used in HTTP or ZeroMQ context
 from collections import defaultdict
 from corepost.enums import Http, HttpHeader
 from corepost.utils import getMandatoryArgumentNames, convertToJson
+from corepost.convert import convertForSerialization, generateXml
 from corepost import Response
 from enums import MediaType
 from formencode import FancyValidator, Invalid
@@ -251,6 +252,8 @@ class RequestRouter:
         Takes care of converting an object (non-String) response to the appropriate format, based on the what the caller can accept.
         Returns a tuple of (content,contentType)
         """
+        obj = convertForSerialization(obj)
+        
         if HttpHeader.ACCEPT in request.received_headers:
             accept = request.received_headers[HttpHeader.ACCEPT]
             if MediaType.APPLICATION_JSON in accept:
@@ -258,10 +261,7 @@ class RequestRouter:
             elif MediaType.TEXT_YAML in accept:
                 return (yaml.dump(obj),MediaType.TEXT_YAML)
             elif MediaType.APPLICATION_XML in accept or MediaType.TEXT_XML in accept:
-                if isinstance(obj,Element):
-                    return (ElementTree.tostring(obj, encoding='utf-8'),MediaType.APPLICATION_XML)
-                else:
-                    raise RuntimeError("Unable to convert String response to XML automatically")
+                return (generateXml(obj),MediaType.APPLICATION_XML+";charset=utf-8")
             else:
                 # no idea, let's do JSON
                 return (convertToJson(obj),MediaType.APPLICATION_JSON)
@@ -271,7 +271,9 @@ class RequestRouter:
 
     def __finishDeferred(self,val,request):
         """Finishes any Defered/inlineCallback methods. Returns Response"""
-        if val != None:
+        if isinstance(val,Response):
+            return val
+        elif val != None:
             try:
                 return self.__generateResponse(request,val)
             except Exception as ex:

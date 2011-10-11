@@ -10,3 +10,6 @@ class Response:
         self.code = code
         self.entity=entity
         self.headers=headers  
+        
+    def __str__(self):
+        return str(self.__dict__)

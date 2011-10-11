@@ -63,7 +63,7 @@ def read(fname):
 
 setup(
     name="CorePost",
-    version="0.0.7",
+    version="0.0.8",
     author="Jacek Furmankiewicz",
     author_email="jacekeadE99@gmail.com",
     description=("A Twisted Web REST micro-framework"),
@@ -88,6 +88,7 @@ setup(
          'freshen>=0.2',
          'formencode>=1.2.4',
          'pyyaml>=3.1.0',
+         'jinja2>=2.6'
     ],
       
 )

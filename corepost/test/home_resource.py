@@ -92,14 +92,17 @@ class HomeApp(CorePost):
     @route("/return/by/accept/class")
     def test_return_class_content_by_accepts(self,request,**kwargs):
         """Uses Python class instead of dict/list"""
-        class Test(UserDict,dict):
-            pass
         
-        t1 = Test()
-        t1.test1="Test1"
-        t2 = Test()
+        class TestReturn:
+            """Test return class"""
+            def __init__(self):
+                self.__t1 = 'Test'
+        
+        t1 = TestReturn()
+        t1.test1 = 'Test1'
+        
+        t2 = TestReturn()
         t2.test2="Test2"
-        val = [t1,t2]
         return (t1,t2)
 
 
