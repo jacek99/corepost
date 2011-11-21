@@ -208,7 +208,7 @@ total: 4443.52
 		
 		Examples:
 			| content																			| accept				| code 	|  
-			| [{"test1": "Test1"}, {"test2": "Test2"}]											| application/json	 	| 200	| # not supported yet
-			| <list><item><test1>Test1</test1></item><item><test2>Test2</test2></item></list>	| application/xml	 	| 200	| # not supported yet
-			| - {test1: Test1}\n- {test2: Test2}												| text/yaml			 	| 200	| # not supported yet
+			| [{"test1": "Test1"}, {"test2": "Test2"}]											| application/json	 	| 200	| 
+			| <list><item><test1>Test1</test1></item><item><test2>Test2</test2></item></list>	| application/xml	 	| 200	| 
+			| - {test1: Test1}\n- {test2: Test2}												| text/yaml			 	| 200	| 
 			
