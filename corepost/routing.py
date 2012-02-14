@@ -132,6 +132,7 @@ class RequestRouter:
         self.__routers = {}
         self.__schema = schema
         self.__registerRouters(urlContainer)
+        self.__urlContainer = urlContainer
 
     @property
     def path(self):
@@ -205,7 +206,7 @@ class RequestRouter:
                 try:
                     # if POST/PUT, check if we need to automatically parse JSON
                     self.__parseRequestData(request)
-                    val = urlrouter.call(self,request,**allargs)
+                    val = urlrouter.call(self.__urlContainer,request,**allargs)
                  
                     #handle Deferreds natively
                     if isinstance(val,defer.Deferred):

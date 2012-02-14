@@ -12,6 +12,10 @@ import json, yaml
 
 class HomeApp(CorePost):
     
+    def __init__(self,*args,**kwargs):
+        CorePost.__init__(self, *args, **kwargs)
+        self.issue1 = "issue 1"
+    
     @route("/",Http.GET)
     @defer.inlineCallbacks
     def root(self,request,**kwargs):
@@ -105,7 +109,12 @@ class HomeApp(CorePost):
         t2.test2="Test2"
         return (t1,t2)
 
-
+    ####################################
+    # Issues
+    ####################################
+    @route("/issues/1")
+    def test_issue_1(self,request,**kwargs):
+        return self.issue1
 
 def run_app_home():
     app = HomeApp()

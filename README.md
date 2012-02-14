@@ -1,7 +1,7 @@
 Twisted REST micro-framework
 ================================
 
-Based on *Flask* API, with integrated multiprocessing support for full usage of all CPUs. 
+Based on *Flask* API, with plans integrated multiprocessing support for full usage of all CPUs. 
 Provides a more Flask/Sinatra-style API on top of the core *twisted.web* APIs.
 
 Geared towards creating REST-oriented server platforms.
@@ -222,7 +222,6 @@ Calling it with "Accept: text/yaml" will return:
 	- {test1: Test1}
 	- {test2: Test2} 
 
-*Note*: marshalling to XML will be supported in a future release. There is no default Python library that does this automatically.
 
 HTTP codes
 ------------------
@@ -255,5 +254,4 @@ Can be run using:
 Plans
 -----
 
-* match all the relevant features of the Flask API
-* integrate twisted.internet.processes in order to scale to multiple CPU cores : http://pypi.python.org/pypi/twisted.internet.processes
+* integrate multi core support

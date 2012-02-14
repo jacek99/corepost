@@ -54,19 +54,11 @@ Changelog
 
 """
 
-import os
 from setuptools import setup
-
-# Utility function to read the README file.
-# Used for the long_description.  It's nice, because now 1) we have a top level
-# README file and 2) it's easier to type in the README file than to put a raw
-# string in below ...
-def read(fname):
-    return  open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
     name="CorePost",
-    version="0.0.8",
+    version="0.0.9",
     author="Jacek Furmankiewicz",
     author_email="jacekeadE99@gmail.com",
     description=("A Twisted Web REST micro-framework"),
@@ -89,13 +81,12 @@ setup(
          'twisted>=11.0.0',
          'formencode>=1.2.4',
          'pyyaml>=3.1.0',
-         'jinja2>=2.6'
+         'jinja2>=2.6',
+         'txZMQ>=0.3.1,'
     ],
     tests_require=[
          'httplib2>=0.7.1',
          'freshen>=0.2',
     ],
     zip_safe = True
-    
-      
 )
