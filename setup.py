@@ -40,6 +40,8 @@ Links
 
 Changelog
 `````````
+* 0.0.10:
+    - removed dependency on txZMQ which was not needed at this point (yet)
 * 0.0.9:
      - fix for issue #3 (wrong class passes as 'self' to router method): 
          https://github.com/jacek99/corepost/issues/3 
@@ -61,7 +63,7 @@ from setuptools import setup
 
 setup(
     name="CorePost",
-    version="0.0.9",
+    version="0.0.10",
     author="Jacek Furmankiewicz",
     author_email="jacekeadE99@gmail.com",
     description=("A Twisted Web REST micro-framework"),
@@ -85,7 +87,6 @@ setup(
          'formencode>=1.2.4',
          'pyyaml>=3.1.0',
          'jinja2>=2.6',
-         'txZMQ>=0.3.1,'
     ],
     tests_require=[
          'httplib2>=0.7.1',
