@@ -40,6 +40,9 @@ Links
 
 Changelog
 `````````
+* 0.0.9:
+     - fix for issue #3 (wrong class passes as 'self' to router method): 
+         https://github.com/jacek99/corepost/issues/3 
 * 0.0.8:
     - support for serializing of classes to JSON,XML,YAML based on caller's Accept header
     - separate routing functionality from CorePost Resource object, in preparation for future multicore support
