@@ -63,9 +63,9 @@ from setuptools import setup
 
 setup(
     name="CorePost",
-    version="0.0.10",
+    version="0.0.11",
     author="Jacek Furmankiewicz",
-    author_email="jacekeadE99@gmail.com",
+    author_email="jacek99@gmail.com",
     description=("A Twisted Web REST micro-framework"),
     license="BSD",
     keywords="twisted rest flask sinatra get post put delete web",

@@ -2,12 +2,13 @@
 Created on 2011-10-03
 @author: jacekf
 
-Common routing classes, regardless of whether used in HTTP or ZeroMQ context
+Common routing classes, regardless of whether used in HTTP or multiprocess context
 '''
 from collections import defaultdict
 from corepost.enums import Http, HttpHeader
 from corepost.utils import getMandatoryArgumentNames, convertToJson
 from corepost.convert import convertForSerialization, generateXml
+from corepost.filters import IRequestFilter, IResponseFilter
 from corepost import Response
 from enums import MediaType
 from formencode import FancyValidator, Invalid
@@ -123,7 +124,7 @@ class RequestRouter:
     Class that handles request->method routing functionality to any type of resource
     '''
     
-    def __init__(self,urlContainer,schema=None):
+    def __init__(self,urlContainer,schema=None,filters=()):
         '''
         Constructor
         '''
@@ -133,6 +134,22 @@ class RequestRouter:
         self.__schema = schema
         self.__registerRouters(urlContainer)
         self.__urlContainer = urlContainer
+        self.__requestFilters = []
+        self.__responseFilters = []
+        
+        #filters
+        if filters != None:
+            for webFilter in filters:
+                valid = False
+                if IRequestFilter.providedBy(webFilter):
+                    self.__requestFilters.append(webFilter)
+                    valid = True
+                if IResponseFilter.providedBy(webFilter):
+                    self.__responseFilters.append(webFilter)
+                    valid = True
+    
+                if not valid:
+                    raise RuntimeError("filter %s must implement IRequestFilter or IResponseFilter" % webFilter.__class__.__name__)
 
     @property
     def path(self):
@@ -156,7 +173,11 @@ class RequestRouter:
     def getResponse(self,request):
         """Finds the appropriate router and dispatches the request to the registered function. Returns the appropriate Response object"""
         # see if already cached
+        response = None
         try:
+            if len(self.__requestFilters) > 0:
+                self.__filterRequests(request)
+            
             path = '/' + '/'.join(request.postpath)
             contentType =  MediaType.WILDCARD if HttpHeader.CONTENT_TYPE not in request.received_headers else request.received_headers[HttpHeader.CONTENT_TYPE]       
                     
@@ -222,18 +243,24 @@ class RequestRouter:
                             else:
                                 request.setResponseCode(201)
                         
-                        return self.__generateResponse(request, val, request.code)
+                        response = self.__generateResponse(request, val, request.code)
                     
                 except exceptions.TypeError as ex:
-                    return self.__createErrorResponse(request,400,"%s" % ex)
+                    response = self.__createErrorResponse(request,400,"%s" % ex)
                 except Exception as ex:
-                    return self.__createErrorResponse(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))                
+                    response =  self.__createErrorResponse(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))                
                 
             else:
-                return self.__createErrorResponse(request,404,"URL '%s' not found\n" % request.path)
+                response = self.__createErrorResponse(request,404,"URL '%s' not found\n" % request.path)
         
         except Exception as ex:
-            return self.__createErrorResponse(request,500,"Internal server error: %s" % ex)
+            response = self.__createErrorResponse(request,500,"Internal server error: %s" % ex)
+        
+        # response handling
+        if response != None and len(self.__responseFilters) > 0:
+            self.__filterResponses(request,response)
+        
+        return response
     
     def __generateResponse(self,request,response,code=200):
         """
@@ -290,19 +317,29 @@ class RequestRouter:
     def __parseRequestData(self,request):
         '''Automatically parses JSON,XML,YAML if present'''
         if request.method in (Http.POST,Http.PUT) and HttpHeader.CONTENT_TYPE in request.received_headers.keys():
-            type = request.received_headers["content-type"]
-            if type == MediaType.APPLICATION_JSON:
+            contentType = request.received_headers["content-type"]
+            if contentType == MediaType.APPLICATION_JSON:
                 try:
                     request.json = json.loads(request.content.read())
                 except Exception as ex:
                     raise TypeError("Unable to parse JSON body: %s" % ex)
-            elif type in (MediaType.APPLICATION_XML,MediaType.TEXT_XML):
+            elif contentType in (MediaType.APPLICATION_XML,MediaType.TEXT_XML):
                 try: 
                     request.xml = ElementTree.XML(request.content.read())
                 except Exception as ex:
                     raise TypeError("Unable to parse XML body: %s" % ex)
-            elif type == MediaType.TEXT_YAML:
+            elif contentType == MediaType.TEXT_YAML:
                 try: 
                     request.yaml = yaml.safe_load(request.content.read())
                 except Exception as ex:
                     raise TypeError("Unable to parse YAML body: %s" % ex)
+    
+    def __filterRequests(self,request):
+        """Filters incoming requests"""
+        for webFilter in self.__requestFilters:
+            webFilter.filterRequest(request)
+            
+    def __filterResponses(self,request,response):
+        """Filters incoming requests"""
+        for webFilter in self.__responseFilters:
+            webFilter.filterResponse(request,response)            

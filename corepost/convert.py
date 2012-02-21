@@ -8,25 +8,26 @@ for JSON/XML/YAML output
 
 import inspect, collections
 from jinja2 import Template
+from UserDict import DictMixin
 
 xmlListTemplate = Template("""<list>{% for item in items %}<item>{% for prop,val in item.iteritems() %}<{{prop}}>{{val}}</{{prop}}>{% endfor %}</item>{% endfor %}</list>""")
 xmlTemplate = Template("""<item>{% for prop,val in item.iteritems() %}<{{prop}}>{{val}}</{{prop}}>{% endfor %}</item>""")
 
-def convertForSerialization(object):
+def convertForSerialization(obj):
     """Converts anything (clas,tuples,list) to the safe serializable equivalent"""
-    if isinstance(object, dict):
-        return traverseDict(object)
-    elif isClassInstance(object):
-        return convertClassToDict(object)
-    elif isinstance(object,collections.Iterable):
+    if isinstance(obj, dict) or isinstance(obj,DictMixin):
+        return traverseDict(obj)
+    elif isClassInstance(obj):
+        return convertClassToDict(obj)
+    elif isinstance(obj,collections.Iterable):
         # iterable
         values = []
-        for val in object:
+        for val in obj:
             values.append(convertForSerialization(val))
         return values
     else:
         # return as-is
-        return object
+        return obj
 
 def convertClassToDict(clazz):
     """Converts a class to a dictionary"""
@@ -46,7 +47,6 @@ def traverseDict(dictObject):
         if inspect.isclass(val):
             # call itself recursively
             val = convertClassToDict(val)
-
         newDict[prop] = val
     
     return newDict

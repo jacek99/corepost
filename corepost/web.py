@@ -25,11 +25,11 @@ class CorePost(Resource):
     '''
     isLeaf = True
     
-    def __init__(self,schema=None):
+    def __init__(self,schema=None,filters=()):
         '''
         Constructor
         '''
-        self.__router = RequestRouter(self,schema)
+        self.__router = RequestRouter(self,schema,filters)
         Resource.__init__(self)
 
     def render_GET(self,request):
