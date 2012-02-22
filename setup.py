@@ -40,6 +40,8 @@ Links
 
 Changelog
 `````````
+* 0.0.11:
+    - added support for request/response filters
 * 0.0.10:
     - removed dependency on txZMQ which was not needed at this point (yet)
 * 0.0.9:
