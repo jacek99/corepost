@@ -3,7 +3,7 @@ Main server classes
 
 @author: jacekf
 '''
-from corepost import Response, IRestServiceContainer
+from corepost import Response, IRESTResource
 from corepost.enums import Http
 from corepost.routing import UrlRouter, RequestRouter
 from enums import MediaType
@@ -20,12 +20,12 @@ from zope.interface import implements
 #
 #########################################################
     
-class RestServiceContainer(Resource):
+class RESTResource(Resource):
     '''
     Main resource responsible for routing REST requests to the implementing methods
     '''
     isLeaf = True
-    implements(IRestServiceContainer)
+    implements(IRESTResource)
     
     def __init__(self,services=(),schema=None,filters=()):
         '''
@@ -54,7 +54,7 @@ class RestServiceContainer(Resource):
     def __renderUrl(self,request):
         try:
             val = self.__router.getResponse(request)
-            
+
             # return can be Deferred or Response
             if isinstance(val,Deferred):
                 val.addCallback(self.__finishRequest,request)

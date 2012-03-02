@@ -3,8 +3,12 @@ Server tests
 @author: jacekf
 '''
 
-from corepost import Response
-from corepost.web import RestServiceContainer 
+from corepost import Response, NotFoundException, AlreadyExistsException
+from corepost.web import RESTResource, route, Http 
+from twisted.python import log
+import sys
+
+#log.startLogging(sys.stdout)
 
 class DB():
     """Fake in-memory DB for testing"""
@@ -14,7 +18,7 @@ class Customer():
     """Represents customer entity"""
     def __init__(self,customerId,firstName,lastName):
         (self.customerId,self.firstName,self.lastName) = (customerId,firstName,lastName)
-        self.addresses = {}
+        self.addresses = []
 
 class CustomerAddress():
     """Represents customer address entity"""
@@ -23,77 +27,50 @@ class CustomerAddress():
 
 class CustomerRestService():
     path = "/customer"
-    
+
+    @route("/")
     def getAll(self,request):
-        return DB.customers
+        return DB.customers.values()
     
+    @route("/<customerId>")
     def get(self,request,customerId):
-        return DB.customers[customerId] if customerId in DB.customers else Response(404, "Customer %s not found" % customerId)
+        if customerId in DB.customers:
+            return DB.customers[customerId]
+        else:
+            raise NotFoundException("Customer", customerId)
     
+    @route("/",Http.POST)
     def post(self,request,customerId,firstName,lastName):
         if customerId in DB.customers:
-            return Response(409,"Customer %s already exists" % customerId)
+            raise AlreadyExistsException("Customer",customerId)
         else:
             DB.customers[customerId] = Customer(customerId, firstName, lastName)
             return Response(201)
-        
+    
+    @route("/<customerId>",Http.PUT)        
     def put(self,request,customerId,firstName,lastName):
         if customerId in DB.customers:
             DB.customers[customerId].firstName = firstName
             DB.customers[customerId].lastName = lastName
             return Response(200)
         else:
-            return Response(404, "Customer %s not found" % customerId)
+            raise NotFoundException("Customer", customerId)
 
+    @route("/<customerId>",Http.DELETE)
     def delete(self,request,customerId):
         if customerId in DB.customers:
             del(DB.customers[customerId])
             return Response(200)
         else:
-            return Response(404, "Customer %s not found" % customerId)
+            raise NotFoundException("Customer", customerId)
     
+    @route("/",Http.DELETE)
     def deleteAll(self,request):
         DB.customers.clear()
         return Response(200)
-
-class CustomerAddressRestService():
-    path = "/customer/<customerId>/address"
-    
-    def getAll(self,request,customerId):
-        return DB.customers
-    
-    def get(self,request,customerId):
-        return DB.customers[customerId] if customerId in DB.customers else Response(404, "Customer %s not found" % customerId)
-    
-    def post(self,request,customerId,firstName,lastName):
-        if customerId in DB.customers:
-            return Response(409,"Customer %s already exists" % customerId)
-        else:
-            DB.customers[customerId] = Customer(customerId, firstName, lastName)
-            return Response(201)
-        
-    def put(self,request,customerId,firstName,lastName):
-        if customerId in DB.customers:
-            DB.customers[customerId].firstName = firstName
-            DB.customers[customerId].lastName = lastName
-            return Response(200)
-        else:
-            return Response(404, "Customer %s not found" % customerId)
-
-    def delete(self,request,customerId):
-        if customerId in DB.customers:
-            del(DB.customers[customerId])
-            return Response(200)
-        else:
-            return Response(404, "Customer %s not found" % customerId)
-    
-    def deleteAll(self,request):
-        DB.customers.clear()
-        return Response(200)
-
 
 def run_rest_app():
-    app = RestServiceContainer(restServices=(CustomerRestService(),))
+    app = RESTResource((CustomerRestService(),))
     app.run(8085)
     
 if __name__ == "__main__":

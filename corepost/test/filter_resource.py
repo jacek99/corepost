@@ -3,7 +3,7 @@ Server tests
 @author: jacekf
 '''
 
-from corepost.web import RestServiceContainer, route
+from corepost.web import RESTResource, route
 from corepost.enums import Http
 from corepost.filters import IRequestFilter, IResponseFilter
 from zope.interface import implements
@@ -41,7 +41,7 @@ class FilterService():
         return request.received_headers
 
 def run_filter_app():
-    app = RestServiceContainer(services=(FilterService(),),filters=(Change404to503Filter(),AddCustomHeaderFilter(),WrapAroundFilter(),))
+    app = RESTResource(services=(FilterService(),),filters=(Change404to503Filter(),AddCustomHeaderFilter(),WrapAroundFilter(),))
     app.run(8083)
     
 if __name__ == "__main__":

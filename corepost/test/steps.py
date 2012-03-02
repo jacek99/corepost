@@ -11,8 +11,9 @@ from corepost.test.home_resource import run_app_home
 from corepost.test.multi_resource import run_app_multi
 from corepost.test.arguments import run_app_arguments
 from corepost.test.filter_resource import run_filter_app
+from corepost.test.rest_resource import run_rest_app
 
-apps = {'home_resource' : run_app_home,'multi_resource':run_app_multi,'arguments':run_app_arguments, 'filter_resource':run_filter_app}
+apps = {'home_resource' : run_app_home,'multi_resource':run_app_multi,'arguments':run_app_arguments, 'filter_resource':run_filter_app,'rest_resource':run_rest_app}
 
 NULL = 'None'
 

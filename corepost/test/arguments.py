@@ -3,7 +3,7 @@ Argument extraction tests
 @author: jacekf
 '''
 
-from corepost.web import RestServiceContainer, validate, route
+from corepost.web import RESTResource, validate, route
 from corepost.enums import Http
 from formencode import Schema, validators
 
@@ -29,5 +29,5 @@ class ArgumentApp():
         return "%s - %s - %s" % (rootId,childId,kwargs)
 
 def run_app_arguments():
-    app = RestServiceContainer((ArgumentApp(),))
+    app = RESTResource((ArgumentApp(),))
     app.run(8082)

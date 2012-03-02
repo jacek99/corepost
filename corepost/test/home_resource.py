@@ -3,7 +3,7 @@ Server tests
 @author: jacekf
 '''
 
-from corepost.web import RestServiceContainer, route
+from corepost.web import RESTResource, route
 from corepost.enums import Http, MediaType, HttpHeader
 from twisted.internet import defer
 from xml.etree import ElementTree
@@ -115,7 +115,7 @@ class HomeApp():
         return self.issue1
 
 def run_app_home():
-    app = RestServiceContainer((HomeApp(),))
+    app = RESTResource((HomeApp(),))
     app.run()
     
 if __name__ == "__main__":

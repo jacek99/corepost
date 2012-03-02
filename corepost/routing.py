@@ -5,7 +5,7 @@ Created on 2011-10-03
 Common routing classes, regardless of whether used in HTTP or multiprocess context
 '''
 from collections import defaultdict
-from corepost import Response
+from corepost import Response, RESTException
 from corepost.enums import Http, HttpHeader
 from corepost.utils import getMandatoryArgumentNames, convertToJson
 from corepost.convert import convertForSerialization, generateXml
@@ -16,7 +16,8 @@ from twisted.internet import reactor, defer
 from twisted.web.http import parse_qs
 from twisted.web.resource import Resource
 from twisted.web.server import Site, NOT_DONE_YET
-import re, copy, exceptions, json, yaml
+from twisted.python import log
+import re, copy, exceptions, json, yaml, logging
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 from zope.interface.verify import verifyObject
@@ -264,6 +265,7 @@ class RequestRouter:
                     urlRouter = urlRouterInstance.urlRouter
                     val = urlRouter.call(urlRouterInstance.clazz,request,**allargs)
                  
+                 
                     #handle Deferreds natively
                     if isinstance(val,defer.Deferred):
                         # add callback to finish the request
@@ -281,20 +283,33 @@ class RequestRouter:
                         response = self.__generateResponse(request, val, request.code)
                     
                 except exceptions.TypeError as ex:
+                    log.err(ex)
                     response = self.__createErrorResponse(request,400,"%s" % ex)
+
+                except RESTException as ex:
+                    """Convert REST exceptions to their responses. Input errors log at a lower level to avoid overloading logs"""
+                    if (ex.response.code in (400,404)):
+                        log.msg(ex,logLevel=logging.WARN)
+                    else:
+                        log.err(ex)
+                    response = ex.response
+
                 except Exception as ex:
+                    log.err(ex)
                     response =  self.__createErrorResponse(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))                
                 
             else:
+                log.msg(ex,logLevel=logging.WARN)
                 response = self.__createErrorResponse(request,404,"URL '%s' not found\n" % request.path)
         
         except Exception as ex:
+            log.err(ex)
             response = self.__createErrorResponse(request,500,"Internal server error: %s" % ex)
         
         # response handling
         if response != None and len(self.__responseFilters) > 0:
             self.__filterResponses(request,response)
-        
+
         return response
     
     def __generateResponse(self,request,response,code=200):

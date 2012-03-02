@@ -1,8 +1,8 @@
 '''
-A RestServiceContainer module1 that can be merged into the main RestServiceContainer Resource
+A RESTResource module1 that can be merged into the main RESTResource Resource
 '''
 
-from corepost.web import RestServiceContainer, route
+from corepost.web import RESTResource, route
 from corepost.enums import Http
 
 class HomeApp():
@@ -34,7 +34,7 @@ class Module2():
         return request.path
 
 def run_app_multi():
-    app = RestServiceContainer((HomeApp(),Module1(),Module2()))
+    app = RESTResource((HomeApp(),Module1(),Module2()))
     app.run(8081)
                    
 if __name__ == "__main__":
