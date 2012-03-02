@@ -1,5 +1,6 @@
 Using step definitions from: '../steps'
 
+@url_routing
 Feature: URL routing
 	CorePost should be able to
 	correctly route requests

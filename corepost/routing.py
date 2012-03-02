@@ -242,7 +242,7 @@ class RequestRouter:
                                 self.__cachedUrls[request.method][path][contentType] = CachedUrl(instance, args)
                             urlRouterInstance,pathargs = instance,args
                             break
-                        
+        
             #actual call
             if urlRouterInstance != None and pathargs != None:
                 allargs = copy.deepcopy(pathargs)
@@ -283,7 +283,7 @@ class RequestRouter:
                         response = self.__generateResponse(request, val, request.code)
                     
                 except exceptions.TypeError as ex:
-                    log.err(ex)
+                    log.msg(ex,logLevel=logging.WARN)
                     response = self.__createErrorResponse(request,400,"%s" % ex)
 
                 except RESTException as ex:
@@ -299,7 +299,7 @@ class RequestRouter:
                     response =  self.__createErrorResponse(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))                
                 
             else:
-                log.msg(ex,logLevel=logging.WARN)
+                log.msg("URL %s not found" % path,logLevel=logging.WARN)
                 response = self.__createErrorResponse(request,404,"URL '%s' not found\n" % request.path)
         
         except Exception as ex:
