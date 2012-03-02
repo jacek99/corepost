@@ -3,32 +3,35 @@ Main server classes
 
 @author: jacekf
 '''
-from collections import defaultdict
-from corepost import Response
-from corepost.enums import Http, HttpHeader
-from corepost.utils import getMandatoryArgumentNames, convertToJson
-from corepost.routing import UrlRouter, CachedUrl, RequestRouter
+from corepost import Response, IRestServiceContainer
+from corepost.enums import Http
+from corepost.routing import UrlRouter, RequestRouter
 from enums import MediaType
 from formencode import FancyValidator, Invalid
-from twisted.internet import reactor, defer
-from twisted.web.http import parse_qs
+from twisted.internet import reactor
+from twisted.internet.defer import Deferred
 from twisted.web.resource import Resource
 from twisted.web.server import Site, NOT_DONE_YET
-import re, copy, exceptions, json, yaml
-from xml.etree import ElementTree
-from xml.etree.ElementTree import Element
-from twisted.internet.defer import Deferred
+from zope.interface import implements
+
+#########################################################
+#
+# CLASSES
+#
+#########################################################
     
-class CorePost(Resource):
+class RestServiceContainer(Resource):
     '''
     Main resource responsible for routing REST requests to the implementing methods
     '''
     isLeaf = True
+    implements(IRestServiceContainer)
     
-    def __init__(self,schema=None,filters=()):
+    def __init__(self,services=(),schema=None,filters=()):
         '''
         Constructor
         '''
+        self.services = services
         self.__router = RequestRouter(self,schema,filters)
         Resource.__init__(self)
 
@@ -82,7 +85,6 @@ class CorePost(Resource):
         factory = Site(self)
         reactor.listenTCP(port, factory)    #@UndefinedVariable
         reactor.run()                       #@UndefinedVariable
-       
 
 ##################################################################################################
 #

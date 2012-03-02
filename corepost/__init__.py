@@ -2,6 +2,25 @@
 Common classes
 '''
 
+from zope.interface import Interface, Attribute
+
+#########################################################
+#
+# INTERFACES
+#
+#########################################################
+
+class IRestServiceContainer(Interface):
+    """An interface for all REST services that can be added within a root CorePost resource"""
+    services = Attribute("All the REST services contained in this resource")
+
+
+#########################################################
+#
+# CLASSES
+#
+#########################################################
+
 class Response:
     """
     Custom response object, can be returned instead of raw string response

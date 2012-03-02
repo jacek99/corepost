@@ -3,17 +3,15 @@ Server tests
 @author: jacekf
 '''
 
-from corepost.web import CorePost, route
+from corepost.web import RestServiceContainer, route
 from corepost.enums import Http, MediaType, HttpHeader
 from twisted.internet import defer
 from xml.etree import ElementTree
-from UserDict import UserDict
 import json, yaml
 
-class HomeApp(CorePost):
+class HomeApp():
     
     def __init__(self,*args,**kwargs):
-        CorePost.__init__(self, *args, **kwargs)
         self.issue1 = "issue 1"
     
     @route("/",Http.GET)
@@ -117,7 +115,7 @@ class HomeApp(CorePost):
         return self.issue1
 
 def run_app_home():
-    app = HomeApp()
+    app = RestServiceContainer((HomeApp(),))
     app.run()
     
 if __name__ == "__main__":

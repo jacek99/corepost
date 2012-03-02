@@ -5,13 +5,13 @@ Created on 2011-10-03
 Common routing classes, regardless of whether used in HTTP or multiprocess context
 '''
 from collections import defaultdict
+from corepost import Response
 from corepost.enums import Http, HttpHeader
 from corepost.utils import getMandatoryArgumentNames, convertToJson
 from corepost.convert import convertForSerialization, generateXml
 from corepost.filters import IRequestFilter, IResponseFilter
-from corepost import Response
+
 from enums import MediaType
-from formencode import FancyValidator, Invalid
 from twisted.internet import reactor, defer
 from twisted.web.http import parse_qs
 from twisted.web.resource import Resource
@@ -19,6 +19,7 @@ from twisted.web.server import Site, NOT_DONE_YET
 import re, copy, exceptions, json, yaml
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
+from zope.interface.verify import verifyObject
 
 class UrlRouter:
     ''' Common class for containing info related to routing a request to a function '''
@@ -28,20 +29,21 @@ class UrlRouter:
     __typeConverters = {"int":int,"float":float}
     
     def __init__(self,f,url,methods,accepts,produces,cache):
+        self.__f = f
         self.__url = url
         self.__methods = methods if isinstance(methods,tuple) else (methods,)
         self.__accepts = accepts if isinstance(accepts,tuple) else (accepts,)
         self.__produces = produces
         self.__cache = cache
-        self.__f = f
         self.__argConverters = {} # dict of arg names -> group index
         self.__validators = {}
         self.__mandatory = getMandatoryArgumentNames(f)[2:]
         
+    def compileMatcherForFullUrl(self):
+        """Compiles the regex matches once the URL has been updated to include the full path from the parent class"""
         #parse URL into regex used for matching
-        m = UrlRouter.__urlMatcher.findall(url)
-        
-        self.__matchUrl = "^%s$" % url
+        m = UrlRouter.__urlMatcher.findall(self.url)
+        self.__matchUrl = "^%s$" % self.url
         for match in m:
             if len(match[0]) == 0:
                 # string
@@ -55,6 +57,7 @@ class UrlRouter:
                                     UrlRouter.__urlRegexReplace[match[0]].replace("arg",match[1]))
 
         self.__matcher = re.compile(self.__matchUrl)
+        
         
     @property
     def cache(self):
@@ -101,19 +104,31 @@ class UrlRouter:
             if arg not in kwargs:
                 raise TypeError("Missing mandatory argument '%s'" % arg)
         return self.__f(instance,request,**kwargs)
+    
+    def __str__(self):
+        return "%s %s" % (self.url, self.methods) 
+
+class UrlRouterInstance():
+    """Combines a UrlRouter with a class instance it should be executed against"""
+    def __init__(self,clazz,urlRouter):
+        self.clazz = clazz
+        self.urlRouter = urlRouter
+        
+    def __str__(self):
+        return self.urlRouter.url
 
 class CachedUrl:
     '''
     Used for caching URLs that have been already routed once before. Avoids the overhead
     of regex processing on every incoming call for commonly accessed REST URLs
     '''
-    def __init__(self,router,args):
-        self.__router = router
+    def __init__(self,urlRouterInstance,args):
+        self.__urlRouterInstance = urlRouterInstance
         self.__args = args
         
     @property
-    def router(self):
-        return self.__router
+    def urlRouterInstance(self):
+        return self.__urlRouterInstance
     
     @property
     def args(self):
@@ -124,16 +139,16 @@ class RequestRouter:
     Class that handles request->method routing functionality to any type of resource
     '''
     
-    def __init__(self,urlContainer,schema=None,filters=()):
+    def __init__(self,restServiceContainer,schema=None,filters=()):
         '''
         Constructor
         '''
         self.__urls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict)}
         self.__cachedUrls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict)}
-        self.__routers = {}
+        self.__urlRouterInstances = {}
         self.__schema = schema
-        self.__registerRouters(urlContainer)
-        self.__urlContainer = urlContainer
+        self.__registerRouters(restServiceContainer)
+        self.__urlContainer = restServiceContainer
         self.__requestFilters = []
         self.__responseFilters = []
         
@@ -155,61 +170,80 @@ class RequestRouter:
     def path(self):
         return self.__path    
 
-    def __registerRouters(self,urlContainer):
+    def __registerRouters(self,restServiceContainer):
         """Main method responsible for registering routers"""
         from types import FunctionType
-        for _,func in urlContainer.__class__.__dict__.iteritems():
-            if type(func) == FunctionType and hasattr(func,'corepostRequestRouter'):
-                rq = func.corepostRequestRouter
-                for method in rq.methods:
-                    for accepts in rq.accepts:
-                        self.__urls[method][rq.url][accepts] = rq
-                        self.__routers[func] = rq # needed so that we cdan lookup the router for a specific function
-
-    def route(self,url,methods=(Http.GET,),accepts=MediaType.WILDCARD,produces=None,cache=True):
-        '''Obsolete'''
-        raise RuntimeError("Do not @app.route() any more, as of 0.0.6 API has been re-designed around class methods, see docs and examples")
+        
+        for service in restServiceContainer.services:
+            # check if the service has a root path defined, which is optional
+            rootPath = service.__class__.path if "path" in service.__class__.__dict__ else ""
+            
+            for key in service.__class__.__dict__:
+                func = service.__class__.__dict__[key]
+                # handle REST resources directly on the CorePost resource
+                if type(func) == FunctionType and hasattr(func,'corepostRequestRouter'):
+                    
+                    # if specified, add class path to each function's path
+                    rq = func.corepostRequestRouter
+                    rq.url = "%s%s" % (rootPath,rq.url)
+                    # remove trailing '/' to standardize URLs
+                    if rq.url != "/" and rq.url[-1] == "/":
+                        rq.url = rq.url[:-1] 
+                    
+                    # now that the full URL is set, compile the matcher for it
+                    rq.compileMatcherForFullUrl()
+                    
+                    for method in rq.methods:
+                        for accepts in rq.accepts:
+                            urlRouterInstance = UrlRouterInstance(service,rq)
+                            self.__urls[method][rq.url][accepts] = urlRouterInstance
+                            self.__urlRouterInstances[func] = urlRouterInstance # needed so that we can lookup the urlRouterInstance for a specific function
 
     def getResponse(self,request):
-        """Finds the appropriate router and dispatches the request to the registered function. Returns the appropriate Response object"""
+        """Finds the appropriate instance and dispatches the request to the registered function. Returns the appropriate Response object"""
         # see if already cached
         response = None
         try:
             if len(self.__requestFilters) > 0:
                 self.__filterRequests(request)
+
+            # standardize URL and remove trailing "/" if necessary
+            standardized_postpath = request.postpath if (request.postpath[-1] != '' or request.postpath == ['']) else request.postpath[:-1]
+            path = '/' + '/'.join(standardized_postpath) 
             
-            path = '/' + '/'.join(request.postpath)
             contentType =  MediaType.WILDCARD if HttpHeader.CONTENT_TYPE not in request.received_headers else request.received_headers[HttpHeader.CONTENT_TYPE]       
                     
-            urlrouter, pathargs = None, None
+            urlRouterInstance, pathargs = None, None
             # fetch URL arguments <-> function from cache if hit at least once before
             if contentType in self.__cachedUrls[request.method][path]:
                 cachedUrl = self.__cachedUrls[request.method][path][contentType]
-                urlrouter,pathargs = cachedUrl.router, cachedUrl.args 
+                urlRouterInstance,pathargs = cachedUrl.urlRouterInstance, cachedUrl.args 
             else:
                 # first time this URL is called
-                router = None
+                instance = None
 
-                for contentTypeFunctions in self.__urls[request.method].values():
+                # go through all the URLs, pick up the ones matching by content type
+                # and then validate which ones match by path/argument to a particular UrlRouterInstance
+                for contentTypeInstances in self.__urls[request.method].values():
 
-                    if contentType in contentTypeFunctions:
+                    if contentType in contentTypeInstances:
                         # there is an exact function for this incoming content type
-                        router = contentTypeFunctions[contentType]
-                    elif MediaType.WILDCARD in contentTypeFunctions:
+                        instance = contentTypeInstances[contentType]
+                    elif MediaType.WILDCARD in contentTypeInstances:
                         # fall back to any wildcard method
-                        router = contentTypeFunctions[MediaType.WILDCARD]
+                        instance = contentTypeInstances[MediaType.WILDCARD]
                    
-                    if router != None:   
+                    if instance != None:   
                         # see if the path arguments match up against any function @route definition
-                        args = router.getArguments(path)
+                        args = instance.urlRouter.getArguments(path)
                         if args != None:
-                            if router.cache:
-                                self.__cachedUrls[request.method][path][contentType] = CachedUrl(router, args)
-                            urlrouter,pathargs = router,args
+                            if instance.urlRouter.cache:
+                                self.__cachedUrls[request.method][path][contentType] = CachedUrl(instance, args)
+                            urlRouterInstance,pathargs = instance,args
                             break
                         
             #actual call
-            if urlrouter != None and pathargs != None:
+            if urlRouterInstance != None and pathargs != None:
                 allargs = copy.deepcopy(pathargs)
                 # handler for weird Twisted logic where PUT does not get form params
                 # see: http://twistedmatrix.com/pipermail/twisted-web/2007-March/003338.html
@@ -227,7 +261,8 @@ class RequestRouter:
                 try:
                     # if POST/PUT, check if we need to automatically parse JSON
                     self.__parseRequestData(request)
-                    val = urlrouter.call(self.__urlContainer,request,**allargs)
+                    urlRouter = urlRouterInstance.urlRouter
+                    val = urlRouter.call(urlRouterInstance.clazz,request,**allargs)
                  
                     #handle Deferreds natively
                     if isinstance(val,defer.Deferred):

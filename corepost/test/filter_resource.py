@@ -3,21 +3,21 @@ Server tests
 @author: jacekf
 '''
 
-from corepost.web import CorePost, route
+from corepost.web import RestServiceContainer, route
 from corepost.enums import Http
 from corepost.filters import IRequestFilter, IResponseFilter
-import zope.interface
+from zope.interface import implements
 
 class AddCustomHeaderFilter():
     """Implements just a request filter"""
-    zope.interface.implements(IRequestFilter)
+    implements(IRequestFilter)
     
     def filterRequest(self,request):
         request.received_headers["Custom-Header"] = "Custom Header Value"
 
 class Change404to503Filter():
     """Implements just a response filter that changes 404 to 503 statuses"""
-    zope.interface.implements(IResponseFilter)
+    implements(IResponseFilter)
     
     def filterResponse(self,request,response):
         if response.code == 404:
@@ -25,7 +25,7 @@ class Change404to503Filter():
 
 class WrapAroundFilter():
     """Implements both types of filters in one class"""
-    zope.interface.implements(IRequestFilter,IResponseFilter)
+    implements(IRequestFilter,IResponseFilter)
 
     def filterRequest(self,request):
         request.received_headers["X-Wrap-Input"] = "Input"
@@ -33,14 +33,15 @@ class WrapAroundFilter():
     def filterResponse(self,request,response):
         response.headers["X-Wrap-Output"] = "Output"
 
-class FilterApp(CorePost):
+class FilterService():
+    path = "/"
     
     @route("/",Http.GET)
     def root(self,request,**kwargs):
         return request.received_headers
 
 def run_filter_app():
-    app = FilterApp(filters=(Change404to503Filter(),AddCustomHeaderFilter(),WrapAroundFilter(),))
+    app = RestServiceContainer(services=(FilterService(),),filters=(Change404to503Filter(),AddCustomHeaderFilter(),WrapAroundFilter(),))
     app.run(8083)
     
 if __name__ == "__main__":

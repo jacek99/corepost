@@ -22,3 +22,11 @@ def convertToJson(obj):
         return json.dumps(obj)
     except Exception as ex:
         raise RuntimeError(str(ex))
+
+def checkExpectedInterfaces(objects,expectedInterface):
+    """Verifies that all the objects implement the expected interface"""
+    for obj in objects:
+        if not expectedInterface.providedBy(obj):
+            raise RuntimeError("Object %s does not implement %s interface" % (obj,expectedInterface))
+
+        
