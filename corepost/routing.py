@@ -26,7 +26,7 @@ class UrlRouter:
     ''' Common class for containing info related to routing a request to a function '''
     
     __urlMatcher = re.compile(r"<(int|float|):?([a-zA-Z0-9]+)>")
-    __urlRegexReplace = {"":r"(?P<arg>.+)","int":r"(?P<arg>\d+)","float":r"(?P<arg>\d+.?\d*)"}
+    __urlRegexReplace = {"":r"(?P<arg>([a-zA-Z0-9]+))","int":r"(?P<arg>\d+)","float":r"(?P<arg>\d+.?\d*)"}
     __typeConverters = {"int":int,"float":float}
     
     def __init__(self,f,url,methods,accepts,produces,cache):
@@ -187,10 +187,11 @@ class RequestRouter:
                     # if specified, add class path to each function's path
                     rq = func.corepostRequestRouter
                     rq.url = "%s%s" % (rootPath,rq.url)
-                    # remove trailing '/' to standardize URLs
-                    if rq.url != "/" and rq.url[-1] == "/":
-                        rq.url = rq.url[:-1] 
-                    
+                    # remove first and trailing '/' to standardize URLs
+                    start = 1 if rq.url[0:1] == "/" else 0
+                    end =  -1 if rq.url[len(rq.url) -1] == '/' else len(rq.url)
+                    rq.url = rq.url[start:end]
+                     
                     # now that the full URL is set, compile the matcher for it
                     rq.compileMatcherForFullUrl()
                     
@@ -199,6 +200,7 @@ class RequestRouter:
                             urlRouterInstance = UrlRouterInstance(service,rq)
                             self.__urls[method][rq.url][accepts] = urlRouterInstance
                             self.__urlRouterInstances[func] = urlRouterInstance # needed so that we can lookup the urlRouterInstance for a specific function
+                            
 
     def getResponse(self,request):
         """Finds the appropriate instance and dispatches the request to the registered function. Returns the appropriate Response object"""
@@ -210,8 +212,8 @@ class RequestRouter:
 
             # standardize URL and remove trailing "/" if necessary
             standardized_postpath = request.postpath if (request.postpath[-1] != '' or request.postpath == ['']) else request.postpath[:-1]
-            path = '/' + '/'.join(standardized_postpath) 
-            
+            path = '/'.join(standardized_postpath) 
+
             contentType =  MediaType.WILDCARD if HttpHeader.CONTENT_TYPE not in request.received_headers else request.received_headers[HttpHeader.CONTENT_TYPE]       
                     
             urlRouterInstance, pathargs = None, None

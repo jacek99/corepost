@@ -101,7 +101,8 @@ Links
 
 Changelog
 `````````
-
+* 0.0.13:
+    - perf fix to avoid unnecessary string concatenation when doing URL routing, after code review (thanks to Gerald Tremblay) 
 * 0.0.12:
     - backwards incompatible change: added advanced URL routing for nested REST services.
       CorePost object is gone, REST services are now just standard classes.
@@ -131,7 +132,7 @@ from setuptools import setup
 
 setup(
     name="CorePost",
-    version="0.0.12",
+    version="0.0.13",
     author="Jacek Furmankiewicz",
     author_email="jacek99@gmail.com",
     description=("A Twisted Web REST micro-framework"),
