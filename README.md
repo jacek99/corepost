@@ -127,7 +127,7 @@ The example above creates 2 REST services and exposes the following resources:
 	http://127.0.0.1:8080/customer
 	http://127.0.0.1:8080/customer/<customerId>					
 	http://127.0.0.1:8080/customer/<customerId>/address
-	http://127.0.0.1:8080/customer/<customerId>/address/>addressId>
+	http://127.0.0.1:8080/customer/<customerId>/address/<addressId>
 
 Path argument extraction
 ------------------------
