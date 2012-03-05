@@ -97,6 +97,7 @@ Feature: REST App
 		# add 1
 		When as user 'None:None' I POST 'http://127.0.0.1:8085/customer/d1/address' with 'addressId=HOME&streetNumber=100&streetName=MyStreet&stateCode=CA&countryCode=US'
 		Then I expect HTTP code 201
+		# get just the address
 		When as user 'None:None' I GET 'http://127.0.0.1:8085/customer/d1/address/HOME'
 		Then I expect HTTP code 200
 		And I expect JSON content
@@ -108,4 +109,42 @@ Feature: REST App
     "streetNumber": "100"
 }
 		"""
+		# get the customer with the address
+		When as user 'None:None' I GET 'http://127.0.0.1:8085/customer/d1'
+		Then I expect HTTP code 200
+		And I expect JSON content
+		"""
+{
+    "addresses": {
+        "HOME": {
+            "countryCode": "US", 
+            "stateCode": "CA", 
+            "streetName": "MyStreet", 
+            "streetNumber": "100"
+        }
+    }, 
+    "customerId": "d1", 
+    "firstName": "John", 
+    "lastName": "Doe1"
+}
+       	"""
+		# update address
+		When as user 'None:None' I PUT 'http://127.0.0.1:8085/customer/d1/address/HOME' with 'streetNumber=1002&streetName=MyStreet2&stateCode=CA&countryCode=US'
+		Then I expect HTTP code 200
+		When as user 'None:None' I GET 'http://127.0.0.1:8085/customer/d1/address/HOME'
+		Then I expect HTTP code 200
+		And I expect JSON content
+		"""
+{
+    "countryCode": "US", 
+    "stateCode": "CA", 
+    "streetName": "MyStreet2", 
+    "streetNumber": "1002"
+}
+		"""
+		# delete address
+		When as user 'None:None' I DELETE 'http://127.0.0.1:8085/customer/d1/address/HOME'
+		Then I expect HTTP code 200
+		When as user 'None:None' I GET 'http://127.0.0.1:8085/customer/d1/address/HOME'
+		Then I expect HTTP code 404
 		

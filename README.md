@@ -1,7 +1,7 @@
 Twisted REST micro-framework
 ================================
 
-Based on *Flask* API, with plans integrated multiprocessing support for full usage of all CPUs. 
+Based on *Flask* API, with plans for integrated multiprocessing support for full usage of all CPUs. 
 Provides a more Flask/Sinatra-style API on top of the core *twisted.web* APIs.
 
 Geared towards creating REST-oriented server platforms.
@@ -12,10 +12,10 @@ Single REST module example
 
 The simplest possible REST application:
 
-    from corepost.web import CorePost, route
+    from corepost.web import route, RESTResource
     from corepost.enums import Http
     
-    class RestApp(CorePost):
+    class RestApp():
     
         @route("/",Http.GET)
         def root(self,request,**kwargs):
@@ -30,66 +30,157 @@ The simplest possible REST application:
             return "%s" % numericid
     
     if __name__ == '__main__':
-        app = RestApp()
+        app = RESTResource((RestApp,))
         app.run()
 
 
 Multi-module REST application
 --------------------------------
 
-The key CorePost object is just an extension of the regular twisted.web Resource object.
-Therefore, it can easily be used to assemble a multi-module REST applications with
-different CorePost resources serving from different context paths:
+Once can assemble a multi-module REST applications with
+different REST services responding from different context paths.
+Notice the class *path* attribute which provides a common URL prefix for all REST operations
+on a particular service:
 
-	from corepost.web import CorePost, route
-	from corepost.enums import Http
-	from twisted.web.resource import Resource
-	from twisted.internet import reactor
-	from twisted.web.server import Site
+	from corepost import Response, NotFoundException, AlreadyExistsException
+	from corepost.web import RESTResource, route, Http 
 	
-	class HomeApp(CorePost):
+	class DB():
+	    """Fake in-memory DB for testing"""
+	    customers = {}
+	
+	    @classmethod
+	    def getAllCustomers(cls):
+	        return DB.customers.values()
+	
+	    @classmethod
+	    def getCustomer(cls,customerId):
+	        if customerId in DB.customers:
+	            return DB.customers[customerId]
+	        else:
+	            raise NotFoundException("Customer",customerId)
+	
+	    @classmethod
+	    def saveCustomer(cls,customer):
+	        if customer.customerId in DB.customers:
+	            raise AlreadyExistsException("Customer",customer.customerId)
+	        else:
+	            DB.customers[customer.customerId] = customer
+	
+	    @classmethod
+	    def deleteCustomer(cls,customerId):
+	        if customerId in DB.customers:
+	            del(DB.customers[customerId])
+	        else:
+	            raise NotFoundException("Customer",customerId)
+	
+	    @classmethod
+	    def deleteAllCustomers(cls):
+	        DB.customers.clear()
+	
+	    @classmethod
+	    def getCustomerAddress(cls,customerId,addressId):
+	        c = DB.getCustomer(customerId)
+	        if addressId in c.addresses:
+	            return c.addresses[addressId]
+	        else:
+	            raise NotFoundException("Customer Address",addressId)
+	
+	
+	class Customer:
+	    """Represents customer entity"""
+	    def __init__(self,customerId,firstName,lastName):
+	        (self.customerId,self.firstName,self.lastName) = (customerId,firstName,lastName)
+	        self.addresses = {}
+	
+	class CustomerAddress:
+	    """Represents customer address entity"""
+	    def __init__(self,streetNumber,streetName,stateCode,countryCode):
+	        (self.streetNumber,self.streetName,self.stateCode,self.countryCode) = (streetNumber,streetName,stateCode,countryCode)
+	
+	class CustomerRESTService():
+	    path = "/customer"
 	
 	    @route("/")
-	    def home_root(self,request,**kwargs):
-	        return "HOME %s" % kwargs
-	
-	class Module1(CorePost):
-	
-	    @route("/",Http.GET)
-	    def module1_get(self,request,**kwargs):
-	        return request.path
+	    def getAll(self,request):
+	        return DB.getAllCustomers()
 	    
-	    @route("/sub",Http.GET)
-	    def module1e_sub(self,request,**kwargs):
-	        return request.path
-	
-	class Module2(CorePost):
+	    @route("/<customerId>")
+	    def get(self,request,customerId):
+	        return DB.getCustomer(customerId)
 	    
-	    @route("/",Http.GET)
-	    def module2_get(self,request,**kwargs):
-	        return request.path
+	    @route("/",Http.POST)
+	    def post(self,request,customerId,firstName,lastName):
+	        customer = Customer(customerId, firstName, lastName)
+	        DB.saveCustomer(customer)
+	        return Response(201)
 	    
-	    @route("/sub",Http.GET)
-	    def module2_sub(self,request,**kwargs):
-	        return request.path
+	    @route("/<customerId>",Http.PUT)        
+	    def put(self,request,customerId,firstName,lastName):
+	        c = DB.getCustomer(customerId)
+	        (c.firstName,c.lastName) = (firstName,lastName)
+	        return Response(200)
 	
-	def run_app_multi():
-	    app = Resource()
-	    app.putChild('', HomeApp())
-	    app.putChild('module1',Module1())
-	    app.putChild('module2',Module2())
+	    @route("/<customerId>",Http.DELETE)
+	    def delete(self,request,customerId):
+	        DB.deleteCustomer(customerId)
+	        return Response(200)
+	    
+	    @route("/",Http.DELETE)
+	    def deleteAll(self,request):
+	        DB.deleteAllCustomers()
+	        return Response(200)
 	
-	    factory = Site(app)
-	    reactor.listenTCP(8081, factory)  #@UndefinedVariable
-	    reactor.run()                   #@UndefinedVariable
+	class CustomerAddressRESTService():
+	    path = "/customer/<customerId>/address"
+	
+	    @route("/")
+	    def getAll(self,request,customerId):
+	        return DB.getCustomer(customerId).addresses
+	    
+	    @route("/<addressId>")
+	    def get(self,request,customerId,addressId):
+	        return DB.getCustomerAddress(customerId, addressId)
+	    
+	    @route("/",Http.POST)
+	    def post(self,request,customerId,addressId,streetNumber,streetName,stateCode,countryCode):
+	        c = DB.getCustomer(customerId)
+	        address = CustomerAddress(streetNumber,streetName,stateCode,countryCode)
+	        c.addresses[addressId] = address
+	        return Response(201)
+	    
+	    @route("/<addressId>",Http.PUT)        
+	    def put(self,request,customerId,addressId,streetNumber,streetName,stateCode,countryCode):
+	        address = DB.getCustomerAddress(customerId, addressId)
+	        (address.streetNumber,address.streetName,address.stateCode,address.countryCode) = (streetNumber,streetName,stateCode,countryCode)
+	        return Response(200)
+	
+	    @route("/<addressId>",Http.DELETE)
+	    def delete(self,request,customerId,addressId):
+	        DB.getCustomerAddress(customerId, addressId) #validate address exists
+	        del(DB.getCustomer(customerId).addresses[addressId])
+	        return Response(200)
+	    
+	    @route("/",Http.DELETE)
+	    def deleteAll(self,request,customerId):
+	        c = DB.getCustomer(customerId)
+	        c.addresses = {}
+	        return Response(200)
+	
+	
+	def run_rest_app():
+	    app = RESTResource((CustomerRESTService(),CustomerAddressRESTService()))
+	    app.run(8080)
+	    
+	if __name__ == "__main__":
+	    run_rest_app()
 
-The example above creates 3 modules ("/","module1","/module2") and exposes the following URLs:
+The example above creates 2 REST services and exposes the following resources:
 
-	http://127.0.0.1:8080					
-	http://127.0.0.1:8080/module1		
-	http://127.0.0.1:8080/module1/sub		
-	http://127.0.0.1:8080/module2			
-	http://127.0.0.1:8080/module2/sub	
+	http://127.0.0.1:8080/customer
+	http://127.0.0.1:8080/customer/<customerId>					
+	http://127.0.0.1:8080/customer/<customerId>/address
+	http://127.0.0.1:8080/customer/<customerId>/address/>addressId>
 
 Path argument extraction
 ------------------------
@@ -126,7 +217,7 @@ Argument validation
 CorePost integrates the popular 'formencode' package to implement form and query argument validation.
 Validators can be specified using a *formencode* Schema object, or via custom field-specific validators, e.g.:
 
-	from corepost.web import CorePost, validate, route
+	from corepost.web import validate, route
 	from corepost.enums import Http
 	from formencode import Schema, validators
 
@@ -134,7 +225,7 @@ Validators can be specified using a *formencode* Schema object, or via custom fi
 	    allow_extra_fields = True
 	    childId = validators.Regex(regex="^value1|value2$")
 	
-	class MyApp(CorePost):
+	class MyApp():
 		
 		@route("/validate/<int:rootId>/schema",Http.POST)
 		@validate(schema=TestSchema())
@@ -283,17 +374,17 @@ A filter class can implement either of them or both (for a wrap around filter), 
 	        response.headers["X-Wrap-Output"] = "Output"
 
 
-In order to activate the filters on a CorePost resource instance, you need to pass a list of them in the constructor as the *filters* parameter, e.g.:
+In order to activate the filters on a RESTResource instance, you need to pass a list of them in the constructor as the *filters* parameter, e.g.:
  	   
  	   
-	class FilterApp(CorePost):
+	class FilterApp():
 	    
 	    @route("/",Http.GET)
 	    def root(self,request,**kwargs):
 	        return request.received_headers
 	
 	def run_filter_app():
-	    app = FilterApp(filters=(Change404to503Filter(),AddCustomHeaderFilter(),WrapAroundFilter(),))
+	    app = RESTResource(services=((FilterApp(),),filters=(Change404to503Filter(),AddCustomHeaderFilter(),WrapAroundFilter(),))
 	    app.run(8083)
 
 	    	        

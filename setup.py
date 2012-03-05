@@ -10,26 +10,82 @@ The simplest possible twisted.web CorePost REST application:
 
 ::
 
-    from corepost.web import CorePost, route
-    from corepost.enums import Http
+    class CustomerRESTService():
+        path = "/customer"
     
-    class RestApp(CorePost):
-    
-        @route("/",Http.GET)
-        def root(self,request,**kwargs):
-            return request.path
+        @route("/")
+        def getAll(self,request):
+            return DB.getAllCustomers()
         
-        @route("/test",Http.GET)
-        def test(self,request,**kwargs):
-            return request.path
+        @route("/<customerId>")
+        def get(self,request,customerId):
+            return DB.getCustomer(customerId)
         
-        @route("/test/<int:numericid>",Http.GET)
-        def test_get_resources(self,request,numericid,**kwargs):
-            return "%s" % numericid
+        @route("/",Http.POST)
+        def post(self,request,customerId,firstName,lastName):
+            customer = Customer(customerId, firstName, lastName)
+            DB.saveCustomer(customer)
+            return Response(201)
+        
+        @route("/<customerId>",Http.PUT)        
+        def put(self,request,customerId,firstName,lastName):
+            c = DB.getCustomer(customerId)
+            (c.firstName,c.lastName) = (firstName,lastName)
+            return Response(200)
     
-    if __name__ == '__main__':
-        app = RestApp()
-        app.run()
+        @route("/<customerId>",Http.DELETE)
+        def delete(self,request,customerId):
+            DB.deleteCustomer(customerId)
+            return Response(200)
+        
+        @route("/",Http.DELETE)
+        def deleteAll(self,request):
+            DB.deleteAllCustomers()
+            return Response(200)
+    
+    class CustomerAddressRESTService():
+        path = "/customer/<customerId>/address"
+    
+        @route("/")
+        def getAll(self,request,customerId):
+            return DB.getCustomer(customerId).addresses
+        
+        @route("/<addressId>")
+        def get(self,request,customerId,addressId):
+            return DB.getCustomerAddress(customerId, addressId)
+        
+        @route("/",Http.POST)
+        def post(self,request,customerId,addressId,streetNumber,streetName,stateCode,countryCode):
+            c = DB.getCustomer(customerId)
+            address = CustomerAddress(streetNumber,streetName,stateCode,countryCode)
+            c.addresses[addressId] = address
+            return Response(201)
+        
+        @route("/<addressId>",Http.PUT)        
+        def put(self,request,customerId,addressId,streetNumber,streetName,stateCode,countryCode):
+            address = DB.getCustomerAddress(customerId, addressId)
+            (address.streetNumber,address.streetName,address.stateCode,address.countryCode) = (streetNumber,streetName,stateCode,countryCode)
+            return Response(200)
+    
+        @route("/<addressId>",Http.DELETE)
+        def delete(self,request,customerId,addressId):
+            DB.getCustomerAddress(customerId, addressId) #validate address exists
+            del(DB.getCustomer(customerId).addresses[addressId])
+            return Response(200)
+        
+        @route("/",Http.DELETE)
+        def deleteAll(self,request,customerId):
+            c = DB.getCustomer(customerId)
+            c.addresses = {}
+            return Response(200)
+    
+    
+    def run_rest_app():
+        app = RESTResource((CustomerRESTService(),CustomerAddressRESTService()))
+        app.run(8080)
+        
+    if __name__ == "__main__":
+        run_rest_app()
 
 Links
 `````
@@ -40,6 +96,11 @@ Links
 
 Changelog
 `````````
+
+* 0.0.12:
+    - backwards incompatible change: added advancer URL routing for nested REST services.
+      CorePost object is gone, REST services are now just standard classes.
+      They get wrapped in a RESTResource object (see sample above) when exposed
 * 0.0.11:
     - added support for request/response filters
 * 0.0.10:

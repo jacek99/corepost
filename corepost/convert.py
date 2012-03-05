@@ -6,7 +6,7 @@ Responsible for converting return values into cleanly serializable dict/tuples/l
 for JSON/XML/YAML output
 '''
 
-import inspect, collections
+import collections
 from jinja2 import Template
 from UserDict import DictMixin
 
@@ -19,7 +19,7 @@ def convertForSerialization(obj):
         return traverseDict(obj)
     elif isClassInstance(obj):
         return convertClassToDict(obj)
-    elif isinstance(obj,collections.Iterable):
+    elif isinstance(obj,collections.Iterable) and not isinstance(obj,str):
         # iterable
         values = []
         for val in obj:
@@ -32,34 +32,31 @@ def convertForSerialization(obj):
 def convertClassToDict(clazz):
     """Converts a class to a dictionary"""
     properties = {}
-
     for prop,val in clazz.__dict__.iteritems():
         #omit private fields
         if not prop.startswith("_"):
             properties[prop] = val
-    
+
     return traverseDict(properties)
 
 def traverseDict(dictObject):
     """Traverses a dict recursively to convertForSerialization any nested classes"""
     newDict = {}
+
     for prop,val in dictObject.iteritems():
-        if inspect.isclass(val):
-            # call itself recursively
-            val = convertClassToDict(val)
-        newDict[prop] = val
+        newDict[prop] = convertForSerialization(val)
     
     return newDict
     
-def generateXml(object):
+def generateXml(obj):
     """Generates basic XML from an object that has already been converted for serialization"""
     if isinstance(object,dict):
-        return str(xmlTemplate.render(item=object.keys()))
-    elif isinstance(object,collections.Iterable):
-        return str(xmlListTemplate.render(items=object))
+        return str(xmlTemplate.render(item=obj.keys()))
+    elif isinstance(obj,collections.Iterable):
+        return str(xmlListTemplate.render(items=obj))
     else:
-        raise RuntimeError("Unable to convert to XML: %s" % object)    
+        raise RuntimeError("Unable to convert to XML: %s" % obj)    
     
-def isClassInstance(object):
-    """Checks if a given object is a class instance"""
-    return getattr(object, "__class__",None) != None and not isinstance(object,dict) and not isinstance(object,tuple) and not isinstance(object,list)
+def isClassInstance(obj):
+    """Checks if a given obj is a class instance"""
+    return getattr(obj, "__class__",None) != None and not isinstance(obj,dict) and not isinstance(obj,tuple) and not isinstance(obj,list) and not isinstance(obj,str)
