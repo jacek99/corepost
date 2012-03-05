@@ -15,7 +15,7 @@ The simplest possible REST application:
     from corepost.web import route, RESTResource
     from corepost.enums import Http
     
-    class RestApp():
+    class RESTService():
     
         @route("/",Http.GET)
         def root(self,request,**kwargs):
@@ -30,7 +30,7 @@ The simplest possible REST application:
             return "%s" % numericid
     
     if __name__ == '__main__':
-        app = RESTResource((RestApp,))
+        app = RESTResource((RESTService,))
         app.run()
 
 
@@ -44,60 +44,7 @@ on a particular service:
 
 	from corepost import Response, NotFoundException, AlreadyExistsException
 	from corepost.web import RESTResource, route, Http 
-	
-	class DB():
-	    """Fake in-memory DB for testing"""
-	    customers = {}
-	
-	    @classmethod
-	    def getAllCustomers(cls):
-	        return DB.customers.values()
-	
-	    @classmethod
-	    def getCustomer(cls,customerId):
-	        if customerId in DB.customers:
-	            return DB.customers[customerId]
-	        else:
-	            raise NotFoundException("Customer",customerId)
-	
-	    @classmethod
-	    def saveCustomer(cls,customer):
-	        if customer.customerId in DB.customers:
-	            raise AlreadyExistsException("Customer",customer.customerId)
-	        else:
-	            DB.customers[customer.customerId] = customer
-	
-	    @classmethod
-	    def deleteCustomer(cls,customerId):
-	        if customerId in DB.customers:
-	            del(DB.customers[customerId])
-	        else:
-	            raise NotFoundException("Customer",customerId)
-	
-	    @classmethod
-	    def deleteAllCustomers(cls):
-	        DB.customers.clear()
-	
-	    @classmethod
-	    def getCustomerAddress(cls,customerId,addressId):
-	        c = DB.getCustomer(customerId)
-	        if addressId in c.addresses:
-	            return c.addresses[addressId]
-	        else:
-	            raise NotFoundException("Customer Address",addressId)
-	
-	
-	class Customer:
-	    """Represents customer entity"""
-	    def __init__(self,customerId,firstName,lastName):
-	        (self.customerId,self.firstName,self.lastName) = (customerId,firstName,lastName)
-	        self.addresses = {}
-	
-	class CustomerAddress:
-	    """Represents customer address entity"""
-	    def __init__(self,streetNumber,streetName,stateCode,countryCode):
-	        (self.streetNumber,self.streetName,self.stateCode,self.countryCode) = (streetNumber,streetName,stateCode,countryCode)
-	
+
 	class CustomerRESTService():
 	    path = "/customer"
 	
