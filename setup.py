@@ -126,7 +126,7 @@ from setuptools import setup
 
 setup(
     name="CorePost",
-    version="0.0.11",
+    version="0.0.12",
     author="Jacek Furmankiewicz",
     author_email="jacek99@gmail.com",
     description=("A Twisted Web REST micro-framework"),
