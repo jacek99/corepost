@@ -2,11 +2,12 @@
 Twisted REST micro-framework
 ================================
 
-Based on *Flask* API, with integrated multiprocessing support for full usage of all CPUs. 
+Based on *Flask* API, with plans for integrated multiprocessing support for full usage of all CPUs. 
 Provides a more Flask/Sinatra-style API on top of the core *twisted.web* APIs.
 Integrates FormEncode for path, form and query argument validation.
 
-The simplest possible twisted.web CorePost REST application:
+An example of a multi--module twisted.web CorePost REST application
+which exposes two separate REST services (for a Customer and Customer Address entities):
 
 ::
 
@@ -87,6 +88,10 @@ The simplest possible twisted.web CorePost REST application:
     if __name__ == "__main__":
         run_rest_app()
 
+And the BDD showing off its different features
+
+https://github.com/jacek99/corepost/blob/master/corepost/test/feature/rest_app.feature
+
 Links
 `````
 
@@ -98,7 +103,7 @@ Changelog
 `````````
 
 * 0.0.12:
-    - backwards incompatible change: added advancer URL routing for nested REST services.
+    - backwards incompatible change: added advanced URL routing for nested REST services.
       CorePost object is gone, REST services are now just standard classes.
       They get wrapped in a RESTResource object (see sample above) when exposed
 * 0.0.11:
