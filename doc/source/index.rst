@@ -1,17 +1,16 @@
-.. CorePost documentation master file, created by
-   sphinx-quickstart on Mon Mar  5 22:23:38 2012.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to CorePost's documentation!
+CorePost
 ====================================
+
+REST micro-framework, powered by the asynchronous Twisted Web APIs
+------------------------------------------------------------------
 
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    
    intro
+   features
    
 Indices and tables
 ==================
