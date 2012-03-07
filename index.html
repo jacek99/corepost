@@ -1,100 +1,157 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset='utf-8'>
 
-  <title>jacek99/corepost @ GitHub</title>
 
-  <style type="text/css">
-    body {
-      margin-top: 1.0em;
-      background-color: #2339cb;
-      font-family: Helvetica, Arial, FreeSans, san-serif;
-      color: #ffffff;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-    h1 { font-size: 3.8em; color: #dcc634; margin-bottom: 3px; }
-    h1 .small { font-size: 0.4em; }
-    h1 a { text-decoration: none }
-    h2 { font-size: 1.5em; color: #dcc634; }
-    h3 { text-align: center; color: #dcc634; }
-    a { color: #dcc634; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-    pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-  </style>
-</head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<body>
-  <a href="https://github.com/jacek99/corepost"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
 
-  <div id="container">
-
-    <div class="download">
-      <a href="https://github.com/jacek99/corepost/zipball/master">
-        <img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
-      <a href="https://github.com/jacek99/corepost/tarball/master">
-        <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
-    </div>
-
-    <h1><a href="https://github.com/jacek99/corepost">corepost</a>
-      <span class="small">by <a href="https://github.com/jacek99">jacek99</a></span></h1>
-
-    <div class="description">
-      REST micro-framework for Python Twisted
-    </div>
-
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-      <p>CorePost - TO DO</p>
+    <title>CorePost &mdash; CorePost 0.0.14 documentation</title>
     
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.0.14',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CorePost 0.0.14 documentation" href="#" />
+    <link rel="next" title="Introduction" href="intro.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             accesskey="N">next</a> |</li>
+        <li><a href="#">CorePost 0.0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
 
-    
-      <h2>Dependencies</h2>
-      <p>twisted
-</p>
-    
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="corepost">
+<h1>CorePost<a class="headerlink" href="#corepost" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="rest-micro-framework-powered-by-the-asynchronous-twisted-web-apis">
+<h2>REST micro-framework, powered by the asynchronous Twisted Web APIs<a class="headerlink" href="#rest-micro-framework-powered-by-the-asynchronous-twisted-web-apis" title="Permalink to this headline">¶</a></h2>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#what-is-corepost">What is CorePost?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#what-is-twisted">What is Twisted?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#what-does-corepost-add-on-top-of-twisted-web">What does CorePost add on top of Twisted Web?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#why-would-i-use-corepost-instead-of-node-js">Why would I use CorePost instead of Node.js?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="features.html#url-routing">URL Routing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="features.html#route-decorator">&#64;route decorator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="features.html#path-argument-extraction">Path argument extraction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="features.html#argument-validation">Argument validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="features.html#multiple-rest-services-under-a-common-root-url">Multiple REST services under a common root URL</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="features.html#content-types">Content types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="features.html#routing-requests-by-incoming-content-type">Routing requests by incoming content type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="features.html#converting-python-objects-to-content-type-based-on-what-caller-can-accept">Converting Python objects to content type based on what caller can accept</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="features.html#filters">Filters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="features.html#asynchronous-operations">Asynchronous Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="features.html#defer-inlinecallbacks-support">&#64;defer.inlineCallbacks support</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="features.html#http-codes">HTTP codes</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
 
-    
-      <h2>Install</h2>
-      <p>easy_install -U corepost</p>
-    
 
-    
-      <h2>License</h2>
-      <p>BSD</p>
-    
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">CorePost</a><ul>
+<li><a class="reference internal" href="#rest-micro-framework-powered-by-the-asynchronous-twisted-web-apis">REST micro-framework, powered by the asynchronous Twisted Web APIs</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
 
-    
-      <h2>Authors</h2>
-      <p>Jacek Furmankiewicz (jacek99@gmail.com)<br/>      </p>
-    
-
-    
-      <h2>Contact</h2>
-      <p>Jacek Furmankiewicz (jacek99@gmail.com)<br/>      </p>
-    
-
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="https://github.com/jacek99/corepost/zipball/master">zip</a> or
-      <a href="https://github.com/jacek99/corepost/tarball/master">tar formats.
+  <h4>Next topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="next chapter">Introduction</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
     </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/jacek99/corepost</pre>
-    </p>
-
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             >next</a> |</li>
+        <li><a href="#">CorePost 0.0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
     <div class="footer">
-      get the source code on GitHub : <a href="https://github.com/jacek99/corepost">jacek99/corepost</a>
+        &copy; Copyright 2012, Jacek Furmankiewicz.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
     </div>
-
-  </div>
-
-</body>
+  </body>
 </html>

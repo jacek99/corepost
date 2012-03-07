@@ -1,0 +1,166 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; CorePost 0.0.14 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.0.14',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CorePost 0.0.14 documentation" href="index.html" />
+    <link rel="next" title="Features" href="features.html" />
+    <link rel="prev" title="CorePost" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="features.html" title="Features"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="CorePost"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">CorePost 0.0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="what-is-corepost">
+<h2>What is CorePost?<a class="headerlink" href="#what-is-corepost" title="Permalink to this headline">¶</a></h2>
+<p>CorePost is a Python REST micro-framework. It is meant for building enterprise-grade REST server applications that provide
+API services to other applications and/or a UI layer (coded in any framework or language).</p>
+<p>More importantly, CorePost is an asynchronous I/O web framework (similar to Node.js).
+Hence it relies on asynchronous I/O operations, which are extremely efficient, but somewhat more complicated to code.</p>
+<p>Fortunately, CorePost does not create it&#8217;s own async I/O library, but instead uses under the mature, well documented
+and extremely well designed Twisted library, in particular its web layer (known simply as twisted.web)</p>
+<p>Coupled with a JIT runtime like PyPy, this should give you the ability to develop REST server side applications
+that will be extremely performant in production, yet (hopefully) fun and productive to develop.</p>
+</div>
+<div class="section" id="what-is-twisted">
+<h2>What is Twisted?<a class="headerlink" href="#what-is-twisted" title="Permalink to this headline">¶</a></h2>
+<p>Twisted is a very mature Python async I/O network toolkit:</p>
+<p><a class="reference external" href="http://twistedmatrix.com/trac/">http://twistedmatrix.com/trac/</a></p>
+<p>Understanding core principles behind Twisted and its APIs is required (at least at a basic level) before coding any CorePost application.</p>
+<p>Hence we recommend either reading the very thorough developer&#8217;s guide:</p>
+<p><a class="reference external" href="http://twistedmatrix.com/documents/current/core/howto/book.pdf">http://twistedmatrix.com/documents/current/core/howto/book.pdf</a></p>
+<p>or the excellent Twisted tutorials from Dave Peticolas:</p>
+<p><a class="reference external" href="http://krondo.com/blog/?page_id=1327">http://krondo.com/blog/?page_id=1327</a></p>
+<p>In particular, understanding the core Twisted Deferred object (and its productive inline callback approach) are crucial
+to productive usage of Twisted APIs for writing asynchronous web applications.</p>
+</div>
+<div class="section" id="what-does-corepost-add-on-top-of-twisted-web">
+<h2>What does CorePost add on top of Twisted Web?<a class="headerlink" href="#what-does-corepost-add-on-top-of-twisted-web" title="Permalink to this headline">¶</a></h2>
+<p>Mostly productivity features that take of low-level plumbing such as:</p>
+<ul class="simple">
+<li>routing request to handler methods</li>
+<li>automatic parsing of JSON/YAML/XML input</li>
+<li>automatic conversion of Python objects and classes to JSON / YAML / XML formats</li>
+<li>simplified exception handling</li>
+<li>custom request / response filters</li>
+</ul>
+<p>However, this is a very thin layer. Once you get to write some serious code that interacts with an external system (e.g. a SQL database)
+you are writing a hard-code Twisted web application. CorePost is just there to make it easier for you and let you focus on business logic,
+while letting it take care of common required plumbing. That&#8217;s it.</p>
+<p>A CorePost application is nothing more than a <em>twisted.web</em> application under the hood.</p>
+</div>
+<div class="section" id="why-would-i-use-corepost-instead-of-node-js">
+<h2>Why would I use CorePost instead of Node.js?<a class="headerlink" href="#why-would-i-use-corepost-instead-of-node-js" title="Permalink to this headline">¶</a></h2>
+<p>As you develop more Twisted code, you will realize how its elegant and powerful <em>Deferred</em> object
+(and especially inline callbacks) make developing <em>readable</em> asynchronous code much more pleasant than any other solution.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#what-is-corepost">What is CorePost?</a></li>
+<li><a class="reference internal" href="#what-is-twisted">What is Twisted?</a></li>
+<li><a class="reference internal" href="#what-does-corepost-add-on-top-of-twisted-web">What does CorePost add on top of Twisted Web?</a></li>
+<li><a class="reference internal" href="#why-would-i-use-corepost-instead-of-node-js">Why would I use CorePost instead of Node.js?</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">CorePost</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="features.html"
+                        title="next chapter">Features</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/intro.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="features.html" title="Features"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="CorePost"
+             >previous</a> |</li>
+        <li><a href="index.html">CorePost 0.0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Jacek Furmankiewicz.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
