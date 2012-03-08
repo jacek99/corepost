@@ -1,0 +1,145 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Argument validation &mdash; CorePost 0.0.14 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.0.14',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CorePost 0.0.14 documentation" href="index.html" />
+    <link rel="next" title="Content types" href="content_types.html" />
+    <link rel="prev" title="URL Routing" href="url_routing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="content_types.html" title="Content types"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="url_routing.html" title="URL Routing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">CorePost 0.0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="argument-validation">
+<h1>Argument validation<a class="headerlink" href="#argument-validation" title="Permalink to this headline">¶</a></h1>
+<p>CorePost integrates the popular &#8216;formencode&#8217; package to implement form and query argument validation.
+Validators can be specified using a <em>formencode</em> Schema object, or via custom field-specific validators.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">corepost.web</span> <span class="kn">import</span> <span class="n">validate</span><span class="p">,</span> <span class="n">route</span>
+<span class="kn">from</span> <span class="nn">corepost.enums</span> <span class="kn">import</span> <span class="n">Http</span>
+<span class="kn">from</span> <span class="nn">formencode</span> <span class="kn">import</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">validators</span>
+
+<span class="k">class</span> <span class="nc">TestSchema</span><span class="p">(</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">allow_extra_fields</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">childId</span> <span class="o">=</span> <span class="n">validators</span><span class="o">.</span><span class="n">Regex</span><span class="p">(</span><span class="n">regex</span><span class="o">=</span><span class="s">&quot;^value1|value2$&quot;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">MyApp</span><span class="p">():</span>
+
+        <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/validate/&lt;int:rootId&gt;/schema&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+        <span class="nd">@validate</span><span class="p">(</span><span class="n">schema</span><span class="o">=</span><span class="n">TestSchema</span><span class="p">())</span>
+        <span class="k">def</span> <span class="nf">postValidateSchema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">rootId</span><span class="p">,</span><span class="n">childId</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;Validate using a common schema&#39;&#39;&#39;</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rootId</span><span class="p">,</span><span class="n">childId</span><span class="p">,</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/validate/&lt;int:rootId&gt;/custom&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+        <span class="nd">@validate</span><span class="p">(</span><span class="n">childId</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">Regex</span><span class="p">(</span><span class="n">regex</span><span class="o">=</span><span class="s">&quot;^value1|value2$&quot;</span><span class="p">))</span>
+        <span class="k">def</span> <span class="nf">postValidateCustom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">rootId</span><span class="p">,</span><span class="n">childId</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;Validate using argument-specific validators&#39;&#39;&#39;</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rootId</span><span class="p">,</span><span class="n">childId</span><span class="p">,</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Please see the <em>FormEncode</em> documentation:</p>
+<p><a class="reference external" href="http://www.formencode.org/en/latest/Validator.html">http://www.formencode.org/en/latest/Validator.html</a></p>
+<p>for list of available validators:</p>
+<ul class="simple">
+<li>Common : <a class="reference external" href="http://www.formencode.org/en/latest/modules/validators.html#module-formencode.validators">http://www.formencode.org/en/latest/modules/validators.html#module-formencode.validators</a></li>
+<li>National : <a class="reference external" href="http://www.formencode.org/en/latest/modules/national.html#module-formencode.national">http://www.formencode.org/en/latest/modules/national.html#module-formencode.national</a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="url_routing.html"
+                        title="previous chapter">URL Routing</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="content_types.html"
+                        title="next chapter">Content types</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/arguments.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="content_types.html" title="Content types"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="url_routing.html" title="URL Routing"
+             >previous</a> |</li>
+        <li><a href="index.html">CorePost 0.0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Jacek Furmankiewicz.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
