@@ -1,21 +1,24 @@
 CorePost
 ====================================
 
-REST micro-framework, powered by the asynchronous Twisted Web APIs
-------------------------------------------------------------------
-
-Contents:
+A Twisted REST micro-framework
+------------------------------
 
 .. toctree::
    :maxdepth: 4
    
    intro
-   features
    
-Indices and tables
-==================
+Features
+--------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+.. toctree::
+   :maxdepth: 4
+   
+   url_routing
+   arguments
+   content_types
+   filters
+   http_codes
+   async
+   modules
