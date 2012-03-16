@@ -42,7 +42,7 @@ based on URL (with dynamic paths), HTTP method, expected content type, etc::
 	* http://twistedmatrix.com/documents/current/core/howto/tap.html
 
 Path argument extraction
-----------------
+------------------------
 
 CorePort can easily extract path arguments from an URL and convert them to the desired type.
 
