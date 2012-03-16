@@ -248,25 +248,14 @@ class RequestRouter:
             #actual call
             if urlRouterInstance != None and pathargs != None:
                 allargs = copy.deepcopy(pathargs)
-                # handler for weird Twisted logic where PUT does not get form params
-                # see: http://twistedmatrix.com/pipermail/twisted-web/2007-March/003338.html
-                requestargs = request.args
-                if request.method == Http.PUT and HttpHeader.CONTENT_TYPE in request.received_headers.keys() \
-                    and request.received_headers[HttpHeader.CONTENT_TYPE] == MediaType.APPLICATION_FORM_URLENCODED:
-                    requestargs = parse_qs(request.content.read(), 1)
-    
-                #merge form args
-                for arg in requestargs.keys():
-                    # maintain first instance of an argument always
-                    if arg not in allargs:
-                        allargs[arg] = requestargs[arg][0]
                 
                 try:
-                    # if POST/PUT, check if we need to automatically parse JSON
+                    # if POST/PUT, check if we need to automatically parse JSON, YAML, XML
                     self.__parseRequestData(request)
+                    # parse request arguments from form or JSON docss
+                    self.__addRequestArguments(request, allargs)
                     urlRouter = urlRouterInstance.urlRouter
                     val = urlRouter.call(urlRouterInstance.clazz,request,**allargs)
-                 
                  
                     #handle Deferreds natively
                     if isinstance(val,defer.Deferred):
@@ -385,6 +374,27 @@ class RequestRouter:
                     request.yaml = yaml.safe_load(request.content.read())
                 except Exception as ex:
                     raise TypeError("Unable to parse YAML body: %s" % ex)
+
+    def __addRequestArguments(self,request,allargs):
+        """Parses the request form arguments OR JSON document root elements to build the list of arguments to a method"""
+        # handler for weird Twisted logic where PUT does not get form params
+        # see: http://twistedmatrix.com/pipermail/twisted-web/2007-March/003338.html
+        requestargs = request.args
+        if request.method == Http.PUT and HttpHeader.CONTENT_TYPE in request.received_headers.keys() \
+            and request.received_headers[HttpHeader.CONTENT_TYPE] == MediaType.APPLICATION_FORM_URLENCODED:
+            requestargs = parse_qs(request.content.read(), 1)
+        
+        #merge form args
+        for arg in requestargs.keys():
+            # maintain first instance of an argument always
+            if arg not in allargs:
+                allargs[arg] = requestargs[arg][0]
+            
+        # if JSON parse root elements instead of form elements   
+        if hasattr(request,'json'):
+            for key in request.json.keys():
+                if key not in allargs:
+                    allargs[key] = request.json[key]
     
     def __filterRequests(self,request):
         """Filters incoming requests"""
