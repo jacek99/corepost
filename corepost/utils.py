@@ -29,4 +29,8 @@ def checkExpectedInterfaces(objects,expectedInterface):
         if not expectedInterface.providedBy(obj):
             raise RuntimeError("Object %s does not implement %s interface" % (obj,expectedInterface))
 
+def safeDictUpdate(dictObject,key,value):
+    """Only adds a key to a dictionary. If key exists, it leaves it untouched"""
+    if key not in dictObject:
+        dictObject[key] = value
         

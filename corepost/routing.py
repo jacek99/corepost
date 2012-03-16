@@ -7,7 +7,7 @@ Common routing classes, regardless of whether used in HTTP or multiprocess conte
 from collections import defaultdict
 from corepost import Response, RESTException
 from corepost.enums import Http, HttpHeader
-from corepost.utils import getMandatoryArgumentNames, convertToJson
+from corepost.utils import getMandatoryArgumentNames, convertToJson, safeDictUpdate
 from corepost.convert import convertForSerialization, generateXml
 from corepost.filters import IRequestFilter, IResponseFilter
 
@@ -385,17 +385,26 @@ class RequestRouter:
             requestargs = parse_qs(request.content.read(), 1)
         
         #merge form args
-        for arg in requestargs.keys():
-            # maintain first instance of an argument always
-            if arg not in allargs:
-                allargs[arg] = requestargs[arg][0]
-            
-        # if JSON parse root elements instead of form elements   
-        if hasattr(request,'json'):
+        if len(requestargs.keys()) > 0:
+            for arg in requestargs.keys():
+                # maintain first instance of an argument always
+                safeDictUpdate(allargs,arg,requestargs[arg][0])
+        elif hasattr(request,'json'):
+            # if YAML parse root elements instead of form elements   
             for key in request.json.keys():
-                if key not in allargs:
-                    allargs[key] = request.json[key]
-    
+                safeDictUpdate(allargs, key, request.json[key])
+        elif hasattr(request,'yaml'):
+            # if YAML parse root elements instead of form elements   
+            for key in request.yaml.keys():
+                safeDictUpdate(allargs, key, request.yaml[key])
+        elif hasattr(request,'xml'):
+            # if XML, parse attributes first, then root nodes
+            for key in request.xml.attrib:
+                safeDictUpdate(allargs, key, request.xml.attrib[key])
+            for el in request.xml.findall("*"):
+                safeDictUpdate(allargs, el.tag,el.text)
+        
+            
     def __filterRequests(self,request):
         """Filters incoming requests"""
         for webFilter in self.__requestFilters:

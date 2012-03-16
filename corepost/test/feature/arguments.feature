@@ -33,11 +33,13 @@ Feature: Arguments
 	@arguments_by_type
 	Scenario Outline: Parse form arguments OR from JSON documents for POST / PUT
 		Given 'arguments' is running
+		
 		# pass in as form arguments
 		When as user 'None:None' I <method> 'http://127.0.0.1:8082/formOrJson' with 'first=John&last=Doe'
 		Then I expect HTTP code <code>
 		And I expect content contains 'John Doe'
-		# pass in as JSON document
+		
+		# pass in as *** JSON *** document
 		When as user 'None:None' I <method> 'http://127.0.0.1:8082/formOrJson' with JSON
 		"""
 		{"first":"Jane","last":"Doeovskaya"}
@@ -51,7 +53,53 @@ Feature: Arguments
 		"""
 		Then I expect HTTP code <code>
 		And I expect content contains 'Jane Doeovskaya'
-		
+
+		# pass in as *** YAML *** document
+		When as user 'None:None' I <method> 'http://127.0.0.1:8082/formOrJson' with YAML
+		"""
+first: Oksana
+last: Dolovskaya
+		"""
+		Then I expect HTTP code <code>
+		And I expect content contains 'Oksana Dolovskaya'
+		# additional arguments should be OK
+		When as user 'None:None' I <method> 'http://127.0.0.1:8082/formOrJson' with YAML
+		"""
+first: Svetlana
+middle: Jane
+last: Gingrychnoya
+		"""
+		Then I expect HTTP code <code>
+		And I expect content contains 'Svetlana Gingrychnoya'
+
+		# pass in as *** XML *** document wit both attributes and child nodes
+		When as user 'None:None' I <method> 'http://127.0.0.1:8082/formOrJson' with XML
+		"""
+<root first="John" last="Doe" middle="Jim"/>
+		"""
+		Then I expect HTTP code <code>
+		And I expect content contains 'John Doe'
+
+		When as user 'None:None' I <method> 'http://127.0.0.1:8082/formOrJson' with XML
+		"""
+<root first="Jan" middle="Jim">
+	<last>Dolowski</last>
+</root>
+		"""
+		Then I expect HTTP code <code>
+		And I expect content contains 'Jan Dolowski'
+
+		When as user 'None:None' I <method> 'http://127.0.0.1:8082/formOrJson' with XML
+		"""
+<root>
+	<first>Grzegorz</first> 
+	<middle>Jim</middle>
+	<last>Brzeczyszczykiewicz</last>
+</root>
+		"""
+		Then I expect HTTP code <code>
+		And I expect content contains 'Grzegorz Brzeczyszczykiewicz'
+
 		Examples:
 			| method	| code	|
 			| POST		| 201	|
