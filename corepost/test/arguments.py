@@ -6,6 +6,8 @@ Argument extraction tests
 from corepost.web import RESTResource, validate, route
 from corepost.enums import Http
 from formencode import Schema, validators
+from twisted.python import log
+import os
 
 class TestSchema(Schema):
     allow_extra_fields = True
@@ -27,6 +29,11 @@ class ArgumentApp():
     @validate(childId=validators.Regex(regex="^jacekf|test$"))
     def postValidateCustom(self,request,rootId,childId,**kwargs):
         return "%s - %s - %s" % (rootId,childId,kwargs)
+
+    @route("/formOrJson",(Http.POST,Http.PUT))
+    def postArgumentsByContentType(self,request,first,last,**kwargs):
+        return "%s %s" % (str(first),str(last))
+
 
 def run_app_arguments():
     app = RESTResource((ArgumentApp(),))
