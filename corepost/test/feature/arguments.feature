@@ -44,6 +44,13 @@ Feature: Arguments
 		"""
 		Then I expect HTTP code <code>
 		And I expect content contains 'Jane Doeovskaya'
+		# additional arguments should be OK
+		When as user 'None:None' I <method> 'http://127.0.0.1:8082/formOrJson' with JSON
+		"""
+		{"first":"Jane","last":"Doeovskaya","middle":"Oksana"}
+		"""
+		Then I expect HTTP code <code>
+		And I expect content contains 'Jane Doeovskaya'
 		
 		Examples:
 			| method	| code	|
