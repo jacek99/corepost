@@ -6,8 +6,6 @@ Argument extraction tests
 from corepost.web import RESTResource, validate, route
 from corepost.enums import Http
 from formencode import Schema, validators
-from twisted.python import log
-import os
 
 class TestSchema(Schema):
     allow_extra_fields = True
