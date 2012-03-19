@@ -1,0 +1,501 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Features &mdash; CorePost 0.0.14 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.0.14',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CorePost 0.0.14 documentation" href="index.html" />
+    <link rel="prev" title="Introduction" href="intro.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">CorePost 0.0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="features">
+<h1>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h1>
+<p>Here is a breakdown of key CorePost features</p>
+<div class="section" id="url-routing">
+<h2>URL Routing<a class="headerlink" href="#url-routing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="route-decorator">
+<h3>&#64;route decorator<a class="headerlink" href="#route-decorator" title="Permalink to this headline">¶</a></h3>
+<p>Via a simple <em>&#64;route</em> decorator you can automatically route <em>twisted.web</em> Request objects to your class method
+based on URL (with dynamic paths), HTTP method, expected content type, etc:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">corepost.web</span> <span class="kn">import</span> <span class="n">route</span><span class="p">,</span> <span class="n">RESTResource</span>
+<span class="kn">from</span> <span class="nn">corepost.enums</span> <span class="kn">import</span> <span class="n">Http</span>
+
+<span class="k">class</span> <span class="nc">RESTService</span><span class="p">():</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">GET</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">path</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/test&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">GET</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">path</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/test/&lt;int:numericid&gt;&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">GET</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_get_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">numericid</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">numericid</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">RESTResource</span><span class="p">((</span><span class="n">RESTService</span><span class="p">,))</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><em>Note</em>:</p>
+<blockquote>
+<div><p>This piece of code:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>is just for convenience when showing code samples and writing unit tests.
+In a real production application you would use existing Twisted <em>twistd</em> functionality:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://twistedmatrix.com/documents/current/core/howto/basics.html">http://twistedmatrix.com/documents/current/core/howto/basics.html</a></li>
+<li><a class="reference external" href="http://twistedmatrix.com/documents/current/core/howto/application.html">http://twistedmatrix.com/documents/current/core/howto/application.html</a></li>
+<li><a class="reference external" href="http://twistedmatrix.com/documents/current/core/howto/tap.html">http://twistedmatrix.com/documents/current/core/howto/tap.html</a></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="path-argument-extraction">
+<h3>Path argument extraction<a class="headerlink" href="#path-argument-extraction" title="Permalink to this headline">¶</a></h3>
+<p>CorePort can easily extract path arguments from an URL and convert them to the desired type.</p>
+<p>The supported types are:</p>
+<ul class="simple">
+<li><em>int</em></li>
+<li><em>float</em></li>
+<li><em>string</em></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/int/&lt;int:intarg&gt;/float/&lt;float:floatarg&gt;/string/&lt;stringarg&gt;&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">GET</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">intarg</span><span class="p">,</span><span class="n">floatarg</span><span class="p">,</span><span class="n">stringarg</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="argument-validation">
+<h3>Argument validation<a class="headerlink" href="#argument-validation" title="Permalink to this headline">¶</a></h3>
+<p>CorePost integrates the popular &#8216;formencode&#8217; package to implement form and query argument validation.
+Validators can be specified using a <em>formencode</em> Schema object, or via custom field-specific validators.</p>
+<p>Example:</p>
+<div class="highlight-python"><pre>from corepost.web import validate, route
+from corepost.enums import Http
+from formencode import Schema, validators
+
+class TestSchema(Schema):
+    allow_extra_fields = True
+    childId = validators.Regex(regex="^value1|value2$")
+
+class MyApp():
+
+        @route("/validate/&lt;int:rootId&gt;/schema",Http.POST)
+        @validate(schema=TestSchema())
+        def postValidateSchema(self,request,rootId,childId,**kwargs):
+            '''Validate using a common schema'''
+            return "%s - %s - %s" % (rootId,childId,kwargs)
+
+        @route("/validate/&lt;int:rootId&gt;/custom",Http.POST)
+        @validate(childId=validators.Regex(regex="^value1|value2$"))
+        def postValidateCustom(self,request,rootId,childId,**kwargs):
+            '''Validate using argument-specific validators'
+            return "%s - %s - %s" % (rootId,childId,kwargs)</pre>
+</div>
+<p>Please see the <em>FormEncode</em> &lt;<a class="reference external" href="http://www.formencode.org/en/latest/Validator.html">http://www.formencode.org/en/latest/Validator.html</a>&gt; documentation
+for list of available validators:</p>
+<ul class="simple">
+<li>Common &lt;<a class="reference external" href="http://www.formencode.org/en/latest/modules/validators.html#module-formencode.validators">http://www.formencode.org/en/latest/modules/validators.html#module-formencode.validators</a>&gt;</li>
+<li>National &lt;<a class="reference external" href="http://www.formencode.org/en/latest/modules/national.html#module-formencode.national">http://www.formencode.org/en/latest/modules/national.html#module-formencode.national</a>&gt;</li>
+</ul>
+</div>
+<div class="section" id="multiple-rest-services-under-a-common-root-url">
+<h3>Multiple REST services under a common root URL<a class="headerlink" href="#multiple-rest-services-under-a-common-root-url" title="Permalink to this headline">¶</a></h3>
+<p>A typical case in REST is where you have parent/child resources (business entities), e.g.</p>
+<div class="highlight-python"><pre>Customer
+
+        Customer Address
+
+        Customer Phone
+
+        Customer Order
+
+                Customer Invoice
+
+                        Customer Invoice Payment</pre>
+</div>
+<p>etc.</p>
+<p>This can create a URL structure like:</p>
+<div class="highlight-python"><pre>/customer
+
+/customer/&lt;customerId&gt;
+
+/customer/&lt;customerId&gt;/address
+
+/customer/&lt;customerId&gt;/address/&lt;addressId&gt;
+
+/customer/&lt;customerId&gt;/phone
+
+/customer/&lt;customerId&gt;/phone/&lt;phoneId&gt;
+
+/customer/&lt;customerId&gt;/invoice
+
+/customer/&lt;customerId&gt;/invoice/&lt;invoiceId&gt;
+
+/customer/&lt;customerId&gt;/invoice/&lt;invoiceId&gt;/payment
+
+/customer/&lt;customerId&gt;/invoice/&lt;invoiceId&gt;/payment/&lt;paymentId&gt;</pre>
+</div>
+<p>CorePost allows you to write small, modular classes that implement a REST service for just a single entity,
+driven by URL paths with dynamic elements in them (e.g. the <em>customerId</em>, <em>invoiceId</em>, <em>paymentId</em> path parameters in the sample above).
+You do not have to mesh all these different entities in a single class.</p>
+<p>At the end, you wrap all of the different REST services in a single <em>RESTResource</em> object (which extends the regular Twisted Web Resource object)
+and it takes care of routing the request to the appropriate class.</p>
+<p>Here is a full-blown example of two REST services for Customer and Customer Address:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">corepost</span> <span class="kn">import</span> <span class="n">Response</span><span class="p">,</span> <span class="n">NotFoundException</span><span class="p">,</span> <span class="n">AlreadyExistsException</span>
+<span class="kn">from</span> <span class="nn">corepost.web</span> <span class="kn">import</span> <span class="n">RESTResource</span><span class="p">,</span> <span class="n">route</span><span class="p">,</span> <span class="n">Http</span>
+
+<span class="k">class</span> <span class="nc">CustomerRESTService</span><span class="p">():</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s">&quot;/customer&quot;</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">getAll</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DB</span><span class="o">.</span><span class="n">getAllCustomers</span><span class="p">()</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&lt;customerId&gt;&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">customerId</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DB</span><span class="o">.</span><span class="n">getCustomer</span><span class="p">(</span><span class="n">customerId</span><span class="p">)</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">customerId</span><span class="p">,</span><span class="n">firstName</span><span class="p">,</span><span class="n">lastName</span><span class="p">):</span>
+        <span class="n">customer</span> <span class="o">=</span> <span class="n">Customer</span><span class="p">(</span><span class="n">customerId</span><span class="p">,</span> <span class="n">firstName</span><span class="p">,</span> <span class="n">lastName</span><span class="p">)</span>
+        <span class="n">DB</span><span class="o">.</span><span class="n">saveCustomer</span><span class="p">(</span><span class="n">customer</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="mi">201</span><span class="p">)</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&lt;customerId&gt;&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">PUT</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">customerId</span><span class="p">,</span><span class="n">firstName</span><span class="p">,</span><span class="n">lastName</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">DB</span><span class="o">.</span><span class="n">getCustomer</span><span class="p">(</span><span class="n">customerId</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">firstName</span><span class="p">,</span><span class="n">c</span><span class="o">.</span><span class="n">lastName</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="n">firstName</span><span class="p">,</span><span class="n">lastName</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&lt;customerId&gt;&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">DELETE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">customerId</span><span class="p">):</span>
+        <span class="n">DB</span><span class="o">.</span><span class="n">deleteCustomer</span><span class="p">(</span><span class="n">customerId</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">DELETE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">deleteAll</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">):</span>
+        <span class="n">DB</span><span class="o">.</span><span class="n">deleteAllCustomers</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">CustomerAddressRESTService</span><span class="p">():</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s">&quot;/customer/&lt;customerId&gt;/address&quot;</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">getAll</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">customerId</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DB</span><span class="o">.</span><span class="n">getCustomer</span><span class="p">(</span><span class="n">customerId</span><span class="p">)</span><span class="o">.</span><span class="n">addresses</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&lt;addressId&gt;&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">customerId</span><span class="p">,</span><span class="n">addressId</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DB</span><span class="o">.</span><span class="n">getCustomerAddress</span><span class="p">(</span><span class="n">customerId</span><span class="p">,</span> <span class="n">addressId</span><span class="p">)</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">customerId</span><span class="p">,</span><span class="n">addressId</span><span class="p">,</span><span class="n">streetNumber</span><span class="p">,</span><span class="n">streetName</span><span class="p">,</span><span class="n">stateCode</span><span class="p">,</span><span class="n">countryCode</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">DB</span><span class="o">.</span><span class="n">getCustomer</span><span class="p">(</span><span class="n">customerId</span><span class="p">)</span>
+        <span class="n">address</span> <span class="o">=</span> <span class="n">CustomerAddress</span><span class="p">(</span><span class="n">streetNumber</span><span class="p">,</span><span class="n">streetName</span><span class="p">,</span><span class="n">stateCode</span><span class="p">,</span><span class="n">countryCode</span><span class="p">)</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">addresses</span><span class="p">[</span><span class="n">addressId</span><span class="p">]</span> <span class="o">=</span> <span class="n">address</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="mi">201</span><span class="p">)</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&lt;addressId&gt;&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">PUT</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">customerId</span><span class="p">,</span><span class="n">addressId</span><span class="p">,</span><span class="n">streetNumber</span><span class="p">,</span><span class="n">streetName</span><span class="p">,</span><span class="n">stateCode</span><span class="p">,</span><span class="n">countryCode</span><span class="p">):</span>
+        <span class="n">address</span> <span class="o">=</span> <span class="n">DB</span><span class="o">.</span><span class="n">getCustomerAddress</span><span class="p">(</span><span class="n">customerId</span><span class="p">,</span> <span class="n">addressId</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">address</span><span class="o">.</span><span class="n">streetNumber</span><span class="p">,</span><span class="n">address</span><span class="o">.</span><span class="n">streetName</span><span class="p">,</span><span class="n">address</span><span class="o">.</span><span class="n">stateCode</span><span class="p">,</span><span class="n">address</span><span class="o">.</span><span class="n">countryCode</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="n">streetNumber</span><span class="p">,</span><span class="n">streetName</span><span class="p">,</span><span class="n">stateCode</span><span class="p">,</span><span class="n">countryCode</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&lt;addressId&gt;&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">DELETE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">customerId</span><span class="p">,</span><span class="n">addressId</span><span class="p">):</span>
+        <span class="n">DB</span><span class="o">.</span><span class="n">getCustomerAddress</span><span class="p">(</span><span class="n">customerId</span><span class="p">,</span> <span class="n">addressId</span><span class="p">)</span> <span class="c">#validate address exists</span>
+        <span class="k">del</span><span class="p">(</span><span class="n">DB</span><span class="o">.</span><span class="n">getCustomer</span><span class="p">(</span><span class="n">customerId</span><span class="p">)</span><span class="o">.</span><span class="n">addresses</span><span class="p">[</span><span class="n">addressId</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+
+    <span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">DELETE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">deleteAll</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">customerId</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">DB</span><span class="o">.</span><span class="n">getCustomer</span><span class="p">(</span><span class="n">customerId</span><span class="p">)</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">addresses</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">run_rest_app</span><span class="p">():</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">RESTResource</span><span class="p">((</span><span class="n">CustomerRESTService</span><span class="p">(),</span><span class="n">CustomerAddressRESTService</span><span class="p">()))</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">8080</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">run_rest_app</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="content-types">
+<h2>Content types<a class="headerlink" href="#content-types" title="Permalink to this headline">¶</a></h2>
+<p>CorePost integrates support for JSON, YAML and XML (partially) based on request content types.</p>
+<p><em>Parsing of incoming content</em></p>
+<p>Based on the incoming content type in POST/PUT requests,
+the body will be automatically parsed to JSON, YAML and XML (ElementTree)</p>
+<ul class="simple">
+<li>request.json</li>
+<li>request.yaml</li>
+<li>request.xml</li>
+</ul>
+<p>and attached to the request:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/post/json&quot;</span><span class="p">,(</span><span class="n">Http</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">PUT</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">test_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
+
+<span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/post/xml&quot;</span><span class="p">,(</span><span class="n">Http</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">PUT</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">test_xml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">ElementTree</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">xml</span><span class="p">)</span>
+
+<span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/post/yaml&quot;</span><span class="p">,(</span><span class="n">Http</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">PUT</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">test_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">yaml</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="routing-requests-by-incoming-content-type">
+<h3>Routing requests by incoming content type<a class="headerlink" href="#routing-requests-by-incoming-content-type" title="Permalink to this headline">¶</a></h3>
+<p>Based on the incoming content type in POST/PUT requests, the <em>same</em> URL can be hooked up to different router methods:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/post/by/content&quot;</span><span class="p">,(</span><span class="n">Http</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">PUT</span><span class="p">),</span><span class="n">MediaType</span><span class="o">.</span><span class="n">APPLICATION_JSON</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">test_content_app_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">received_headers</span><span class="p">[</span><span class="n">HttpHeader</span><span class="o">.</span><span class="n">CONTENT_TYPE</span><span class="p">]</span>
+
+<span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/post/by/content&quot;</span><span class="p">,(</span><span class="n">Http</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">PUT</span><span class="p">),(</span><span class="n">MediaType</span><span class="o">.</span><span class="n">TEXT_XML</span><span class="p">,</span><span class="n">MediaType</span><span class="o">.</span><span class="n">APPLICATION_XML</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">test_content_xml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">received_headers</span><span class="p">[</span><span class="n">HttpHeader</span><span class="o">.</span><span class="n">CONTENT_TYPE</span><span class="p">]</span>
+
+<span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/post/by/content&quot;</span><span class="p">,(</span><span class="n">Http</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">PUT</span><span class="p">),</span><span class="n">MediaType</span><span class="o">.</span><span class="n">TEXT_YAML</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">test_content_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">received_headers</span><span class="p">[</span><span class="n">HttpHeader</span><span class="o">.</span><span class="n">CONTENT_TYPE</span><span class="p">]</span>
+
+<span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/post/by/content&quot;</span><span class="p">,(</span><span class="n">Http</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">PUT</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">test_content_catch_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">MediaType</span><span class="o">.</span><span class="n">WILDCARD</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="converting-python-objects-to-content-type-based-on-what-caller-can-accept">
+<h3>Converting Python objects to content type based on what caller can accept<a class="headerlink" href="#converting-python-objects-to-content-type-based-on-what-caller-can-accept" title="Permalink to this headline">¶</a></h3>
+<p>Instead of returning string responses, the code can just return Python objects.
+Depending whether the caller can accept JSON (default) or YAML, the Python objects will be automatically converted:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/return/by/accept&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">test_return_content_by_accepts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="p">[{</span><span class="s">&quot;test1&quot;</span><span class="p">:</span><span class="s">&quot;Test1&quot;</span><span class="p">},{</span><span class="s">&quot;test2&quot;</span><span class="p">:</span><span class="s">&quot;Test2&quot;</span><span class="p">}]</span>
+    <span class="k">return</span> <span class="n">val</span>
+</pre></div>
+</div>
+<p>Calling this URL with &#8220;Accept: application/json&#8221; will return:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[{</span><span class="s">&quot;test1&quot;</span><span class="p">:</span> <span class="s">&quot;Test1&quot;</span><span class="p">},</span> <span class="p">{</span><span class="s">&quot;test2&quot;</span><span class="p">:</span> <span class="s">&quot;Test2&quot;</span><span class="p">}]</span>
+</pre></div>
+</div>
+<p>Calling it with &#8220;Accept: text/yaml&#8221; will return:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="o">-</span> <span class="p">{</span><span class="n">test1</span><span class="p">:</span> <span class="n">Test1</span><span class="p">}</span>
+<span class="o">-</span> <span class="p">{</span><span class="n">test2</span><span class="p">:</span> <span class="n">Test2</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="filters">
+<h2>Filters<a class="headerlink" href="#filters" title="Permalink to this headline">¶</a></h2>
+<p>There is support for CorePost resource filters via the two following <em>corepost.filter</em> interfaces:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">IRequestFilter</span><span class="p">(</span><span class="n">Interface</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Request filter interface&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">filterRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Allows to intercept and change an incoming request&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+<span class="k">class</span> <span class="nc">IResponseFilter</span><span class="p">(</span><span class="n">Interface</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Response filter interface&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">filterResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">response</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Allows to intercept and change an outgoing response&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>A filter class can implement either of them or both (for a wrap around filter), e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">AddCustomHeaderFilter</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Implements a request filter that adds a custom header to the incoming request&quot;&quot;&quot;</span>
+    <span class="n">zope</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">implements</span><span class="p">(</span><span class="n">IRequestFilter</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">filterRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">):</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">received_headers</span><span class="p">[</span><span class="s">&quot;Custom-Header&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Custom Header Value&quot;</span>
+
+<span class="k">class</span> <span class="nc">Change404to503Filter</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Implements just a response filter that changes 404 to 503 statuses&quot;&quot;&quot;</span>
+    <span class="n">zope</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">implements</span><span class="p">(</span><span class="n">IResponseFilter</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">filterResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">response</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="mi">503</span>
+
+<span class="k">class</span> <span class="nc">WrapAroundFilter</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Implements both types of filters in one class&quot;&quot;&quot;</span>
+    <span class="n">zope</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">implements</span><span class="p">(</span><span class="n">IRequestFilter</span><span class="p">,</span><span class="n">IResponseFilter</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">filterRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">):</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">received_headers</span><span class="p">[</span><span class="s">&quot;X-Wrap-Input&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Input&quot;</span>
+
+    <span class="k">def</span> <span class="nf">filterResponse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">response</span><span class="p">):</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s">&quot;X-Wrap-Output&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Output&quot;</span>
+</pre></div>
+</div>
+<p>In order to activate the filters on a RESTResource instance, you need to pass a list of them in the constructor as the <em>filters</em> parameter, e.g.:</p>
+<div class="highlight-python"><pre>class FilterApp():
+
+    @route("/",Http.GET)
+    def root(self,request,**kwargs):
+        return request.received_headers
+
+def run_filter_app():
+    app = RESTResource(services=((FilterApp(),),filters=(Change404to503Filter(),AddCustomHeaderFilter(),WrapAroundFilter(),))
+    app.run(8083)</pre>
+</div>
+</div>
+<div class="section" id="asynchronous-operations">
+<h2>Asynchronous Operations<a class="headerlink" href="#asynchronous-operations" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="defer-inlinecallbacks-support">
+<h3>&#64;defer.inlineCallbacks support<a class="headerlink" href="#defer-inlinecallbacks-support" title="Permalink to this headline">¶</a></h3>
+<p>If you want a deferred async method, just use <em>defer.returnValue()</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">GET</span><span class="p">)</span>
+<span class="nd">@defer.inlineCallbacks</span>
+<span class="k">def</span> <span class="nf">root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">val1</span> <span class="o">=</span> <span class="k">yield</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;SELECT ....&quot;</span><span class="p">)</span>
+        <span class="n">val2</span> <span class="o">=</span> <span class="k">yield</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;SELECT ....&quot;</span><span class="p">)</span>
+        <span class="n">defer</span><span class="o">.</span><span class="n">returnValue</span><span class="p">(</span><span class="n">val1</span> <span class="o">+</span> <span class="n">val2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is standard Twisted functionality.</p>
+</div>
+</div>
+<div class="section" id="http-codes">
+<h2>HTTP codes<a class="headerlink" href="#http-codes" title="Permalink to this headline">¶</a></h2>
+<p>By default, CorePost returns the appropriate HTTP code based on the HTTP method:</p>
+<p>Success:</p>
+<ul class="simple">
+<li>200 (OK) - GET, DELETE, PUT</li>
+<li>201 (Created) - POST</li>
+</ul>
+<p>Errors:</p>
+<ul class="simple">
+<li>404 - not able to match any URL</li>
+<li>400 - missing mandatory argument (driven from the arguments on the actual functions)</li>
+<li>400 - argument failed validation</li>
+<li>500 - server error</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Features</a><ul>
+<li><a class="reference internal" href="#url-routing">URL Routing</a><ul>
+<li><a class="reference internal" href="#route-decorator">&#64;route decorator</a></li>
+<li><a class="reference internal" href="#path-argument-extraction">Path argument extraction</a></li>
+<li><a class="reference internal" href="#argument-validation">Argument validation</a></li>
+<li><a class="reference internal" href="#multiple-rest-services-under-a-common-root-url">Multiple REST services under a common root URL</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#content-types">Content types</a><ul>
+<li><a class="reference internal" href="#routing-requests-by-incoming-content-type">Routing requests by incoming content type</a></li>
+<li><a class="reference internal" href="#converting-python-objects-to-content-type-based-on-what-caller-can-accept">Converting Python objects to content type based on what caller can accept</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#filters">Filters</a></li>
+<li><a class="reference internal" href="#asynchronous-operations">Asynchronous Operations</a><ul>
+<li><a class="reference internal" href="#defer-inlinecallbacks-support">&#64;defer.inlineCallbacks support</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#http-codes">HTTP codes</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">Introduction</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/features.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             >previous</a> |</li>
+        <li><a href="index.html">CorePost 0.0.14 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Jacek Furmankiewicz.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
