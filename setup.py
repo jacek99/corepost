@@ -101,6 +101,9 @@ Links
 
 Changelog
 `````````
+* 0.0.14:
+    - automatic parsing of query, form, JSON, YAML and XML arguments: 
+      http://jacek99.github.com/corepost/argument_parsing.html
 * 0.0.13:
     - perf fix to avoid unnecessary string concatenation when doing URL routing, after code review (thanks to Gerald Tremblay) 
 * 0.0.12:
@@ -132,7 +135,7 @@ from setuptools import setup
 
 setup(
     name="CorePost",
-    version="0.0.13",
+    version="0.0.14",
     author="Jacek Furmankiewicz",
     author_email="jacek99@gmail.com",
     description=("A Twisted Web REST micro-framework"),
