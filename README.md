@@ -8,5 +8,4 @@ See our HTML documentation:
 http://jacek99.github.com/corepost/
 
 or the PDF version:
-https://github.com/jacek99/corepost/blob/gh-pages/doc/build/latex/CorePost.pdf
-
+https://github.com/jacek99/corepost/raw/gh-pages/doc/build/latex/CorePost.pdf
