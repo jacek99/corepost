@@ -105,3 +105,9 @@ last: Gingrychnoya
 			| POST		| 201	|
 			| PUT		| 200	|
 											
+	@arguments_by_type
+	Scenario: Parse query arguments for GET
+		Given 'arguments' is running
+		When as user 'None:None' I GET 'http://127.0.0.1:8082/formOrJson?first=John&last=Doe'
+		Then I expect HTTP code 200
+		And I expect content contains 'John Doe'

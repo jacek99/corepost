@@ -13,7 +13,7 @@
 
 
 \title{CorePost Documentation}
-\date{March 08, 2012}
+\date{March 19, 2012}
 \release{0.0.14}
 \author{Jacek Furmankiewicz}
 \newcommand{\sphinxlogo}{}
@@ -296,6 +296,100 @@ Based on the incoming content type in POST/PUT requests, the \emph{same} URL can
 \PYG{k}{def} \PYG{n+nf}{test\PYGZus{}content\PYGZus{}catch\PYGZus{}all}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{o}{*}\PYG{o}{*}\PYG{n}{kwargs}\PYG{p}{)}\PYG{p}{:}
     \PYG{k}{return} \PYG{n}{MediaType}\PYG{o}{.}\PYG{n}{WILDCARD}
 \end{Verbatim}
+
+
+\section{Argument parsing}
+\label{argument_parsing::doc}\label{argument_parsing:argument-parsing}
+CorePost can automatically parse query arguments, form arguments, as well as basic JSON, YAML and XML documents
+and extract those as direct arguments to a REST router method.
+
+Let's say we have a basic method that responds to GET, POST and PUT requests.
+It expects a first name and last name and outputs them back in the response:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nd}{@router}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{/name}\PYG{l+s}{"}\PYG{p}{,}\PYG{p}{(}\PYG{n}{Http}\PYG{o}{.}\PYG{n}{GET}\PYG{p}{,}\PYG{n}{Http}\PYG{o}{.}\PYG{n}{POST}\PYG{p}{,}\PYG{n}{Http}\PYG{o}{.}\PYG{n}{PUT}\PYG{p}{)}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{getName}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{n}{first}\PYG{p}{,}\PYG{n}{last}\PYG{p}{,}\PYG{o}{*}\PYG{o}{*}\PYG{n}{kwargs}\PYG{p}{)}\PYG{p}{:}
+        \PYG{k}{return} \PYG{l+s}{"}\PYG{l+s+si}{\PYGZpc{}s}\PYG{l+s}{ }\PYG{l+s+si}{\PYGZpc{}s}\PYG{l+s}{"} \PYG{o}{\PYGZpc{}} \PYG{p}{(}\PYG{n}{first}\PYG{p}{,} \PYG{n}{last}\PYG{p}{)}
+\end{Verbatim}
+
+
+\subsection{Query arguments}
+\label{argument_parsing:query-arguments}
+For GET requests, the query arguments will be automatically parsed, e.g.:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+curl http://127.0.0.1/name?first=John\&last=Doe
+\end{Verbatim}
+
+
+\subsection{Form encoded arguments}
+\label{argument_parsing:form-encoded-arguments}
+For POST/PUT requests, any form-encoded arguments will be automatically parsed, e.g.:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+curl -X POST http://localhost/name -d "first=John\&last=Doe"
+\end{Verbatim}
+
+
+\subsection{JSON document arguments}
+\label{argument_parsing:json-document-arguments}
+For the same method, you could just post a JSON document instead that looks like this:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{p}{\PYGZob{}}\PYG{l+s}{"}\PYG{l+s}{first}\PYG{l+s}{"}\PYG{p}{:}\PYG{l+s}{"}\PYG{l+s}{John}\PYG{l+s}{"}\PYG{p}{,}\PYG{l+s}{"}\PYG{l+s}{last}\PYG{l+s}{"}\PYG{p}{:}\PYG{l+s}{"}\PYG{l+s}{Doe}\PYG{l+s}{"}\PYG{p}{\PYGZcb{}}
+\end{Verbatim}
+
+CorePost will automatically pass all the root elements of the document as arguments into a method.
+Requires the \emph{`application/json'} content type to be passed.
+
+
+\subsection{YAML document arguments}
+\label{argument_parsing:yaml-document-arguments}
+For the same method, you could just post a YAML document that looks like this:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+first:John
+last:Doe
+\end{Verbatim}
+
+CorePost will automatically pass all the root elements of the document as arguments into a method.
+Requires the \emph{`text/yaml'} content type to be passed.
+
+
+\subsection{XML document arguments}
+\label{argument_parsing:xml-document-arguments}
+XML documents are supported as well. In that case, CorePost will first parse all the attributes on the root node
+and then all of the children underneath the main root node.
+
+Hence all of the XML formats below are valid and would generate the same parameters to a method.
+
+Attributes only:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\textless{}root first="John" last="Doe"/\textgreater{}
+\end{Verbatim}
+
+Mix of attributes and child nodes:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\textless{}root first="John"\textgreater{}
+        \textless{}last\textgreater{}Doe\textless{}/last\textgreater{}
+\textless{}/root\textgreater{}
+\end{Verbatim}
+
+Child nodes only:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\textless{}root\textgreater{}
+        \textless{}first\textgreater{}John\textless{}/first\textgreater{}
+        \textless{}last\textgreater{}Doe\textless{}/last\textgreater{}
+\textless{}/root\textgreater{}
+\end{Verbatim}
+
+Requires the \emph{`text/xml'} OR \emph{`application/xml'} content type to be passed.
+
+As you can see from the examples above, a single CorePost router method can handle all these varied forms of argument parsing
+for you without any additional effort.
 
 
 \section{Argument validation}

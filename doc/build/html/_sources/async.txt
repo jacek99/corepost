@@ -1,8 +1,8 @@
 Asynchronous Operations
-=================
+=======================
 
 @defer.inlineCallbacks support
------------------------
+------------------------------
 
 If you want a deferred async method, just use *defer.returnValue()*::
 

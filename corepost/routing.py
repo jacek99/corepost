@@ -12,15 +12,11 @@ from corepost.convert import convertForSerialization, generateXml
 from corepost.filters import IRequestFilter, IResponseFilter
 
 from enums import MediaType
-from twisted.internet import reactor, defer
+from twisted.internet import defer
 from twisted.web.http import parse_qs
-from twisted.web.resource import Resource
-from twisted.web.server import Site, NOT_DONE_YET
 from twisted.python import log
 import re, copy, exceptions, json, yaml, logging
 from xml.etree import ElementTree
-from xml.etree.ElementTree import Element
-from zope.interface.verify import verifyObject
 
 class UrlRouter:
     ''' Common class for containing info related to routing a request to a function '''

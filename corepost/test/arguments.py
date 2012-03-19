@@ -28,6 +28,10 @@ class ArgumentApp():
     def postValidateCustom(self,request,rootId,childId,**kwargs):
         return "%s - %s - %s" % (rootId,childId,kwargs)
 
+    @route("/formOrJson",Http.GET)
+    def getArgumentsByContentType(self,request,first,last,**kwargs):
+        return "%s %s" % (str(first),str(last))
+
     @route("/formOrJson",(Http.POST,Http.PUT))
     def postArgumentsByContentType(self,request,first,last,**kwargs):
         return "%s %s" % (str(first),str(last))
