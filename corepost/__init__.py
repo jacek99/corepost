@@ -52,3 +52,8 @@ class AlreadyExistsException(ConflictException):
     """Standard 409 exception when REST resource already exists during a POST"""    
     def __init__(self, resourceName, invalidValue, message):
         ConflictException.__init__(self, resourceName, invalidValue, "%s already exists" % resourceName)
+
+class InternalServerException(RESTException):
+    """Standard 500 error"""    
+    def __init__(self, safeErrorMessage):
+        RESTException.__init__(self,Response(500,safeErrorMessage))
