@@ -13,9 +13,14 @@ from UserDict import DictMixin
 xmlListTemplate = Template("""<list>{% for item in items %}<item>{% for prop,val in item.iteritems() %}<{{prop}}>{{val}}</{{prop}}>{% endfor %}</item>{% endfor %}</list>""")
 xmlTemplate = Template("""<item>{% for prop,val in item.iteritems() %}<{{prop}}>{{val}}</{{prop}}>{% endfor %}</item>""")
 
+primitives = (int, long, float, bool, str,unicode)
+
 def convertForSerialization(obj):
     """Converts anything (clas,tuples,list) to the safe serializable equivalent"""
-    if isinstance(obj, dict) or isinstance(obj,DictMixin):
+    if type(obj) in primitives:
+        # no conversion
+        return obj 
+    elif isinstance(obj, dict) or isinstance(obj,DictMixin):
         return traverseDict(obj)
     elif isClassInstance(obj):
         return convertClassToDict(obj)

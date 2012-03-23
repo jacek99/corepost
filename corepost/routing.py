@@ -21,8 +21,8 @@ from xml.etree import ElementTree
 class UrlRouter:
     ''' Common class for containing info related to routing a request to a function '''
     
-    __urlMatcher = re.compile(r"<(int|float|):?([a-zA-Z0-9]+)>")
-    __urlRegexReplace = {"":r"(?P<arg>([a-zA-Z0-9]+))","int":r"(?P<arg>\d+)","float":r"(?P<arg>\d+.?\d*)"}
+    __urlMatcher = re.compile(r"<(int|float|):?([^/]+)>")
+    __urlRegexReplace = {"":r"(?P<arg>([^/]+))","int":r"(?P<arg>\d+)","float":r"(?P<arg>\d+.?\d*)"}
     __typeConverters = {"int":int,"float":float}
     
     def __init__(self,f,url,methods,accepts,produces,cache):
@@ -257,6 +257,7 @@ class RequestRouter:
                     if isinstance(val,defer.Deferred):
                         # add callback to finish the request
                         val.addCallback(self.__finishDeferred,request)
+                        val.addErrback(self.__finishDeferredError,request)
                         return val
                     else:
                         #special logic for POST to return 201 (created)
@@ -305,7 +306,7 @@ class RequestRouter:
         depending on what the caller can accept. Returns Response
         """
         if isinstance(response, str):
-            return Response(code,response,{HttpHeader.CONTENT_TYPE:MediaType.TEXT_PLAIN})
+            return Response(code,response,{HttpHeader.CONTENT_TYPE: MediaType.TEXT_PLAIN})
         elif isinstance(response, Response):
             return response
         else:
@@ -326,7 +327,7 @@ class RequestRouter:
             elif MediaType.TEXT_YAML in accept:
                 return (yaml.dump(obj),MediaType.TEXT_YAML)
             elif MediaType.APPLICATION_XML in accept or MediaType.TEXT_XML in accept:
-                return (generateXml(obj),MediaType.APPLICATION_XML+";charset=utf-8")
+                return (generateXml(obj),MediaType.APPLICATION_XML)
             else:
                 # no idea, let's do JSON
                 return (convertToJson(obj),MediaType.APPLICATION_JSON)
@@ -346,6 +347,11 @@ class RequestRouter:
                 return self.__createErrorResponse(request, 500, msg)
         else:
             return Response(209,None)
+
+    def __finishDeferredError(self,error,request):
+        """Finishes any Defered/inlineCallback methods that raised an error. Returns Response"""
+        log.err(error, "Deferred failed")
+        return self.__createErrorResponse(request, 500,"Internal server error")
     
     def __createErrorResponse(self,request,code,message):
         """Common method for rendering errors"""
