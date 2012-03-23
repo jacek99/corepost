@@ -101,6 +101,8 @@ Links
 
 Changelog
 `````````
+* 0.0.15:
+    - minor bug fixes in auto-converting responses to JSON and parsing arguments/paths with unexpectec characters
 * 0.0.14:
     - automatic parsing of query, form, JSON, YAML and XML arguments: 
       http://jacek99.github.com/corepost/argument_parsing.html
@@ -135,7 +137,7 @@ from setuptools import setup
 
 setup(
     name="CorePost",
-    version="0.0.14",
+    version="0.0.15",
     author="Jacek Furmankiewicz",
     author_email="jacek99@gmail.com",
     description=("A Twisted Web REST micro-framework"),
