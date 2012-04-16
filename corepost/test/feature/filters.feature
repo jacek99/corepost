@@ -25,7 +25,6 @@ Feature: Filters
     "accept-encoding": "gzip, deflate", 
     "custom-header": "Custom Header Value", 
     "host": "127.0.0.1:8083", 
-    "user-agent": "Python-httplib2/0.7.2 (gzip)", 
     "x-wrap-input": "Input"
 }
 		"""

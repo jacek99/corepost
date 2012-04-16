@@ -28,6 +28,7 @@ class WrapAroundFilter():
     implements(IRequestFilter,IResponseFilter)
 
     def filterRequest(self,request):
+        del(request.received_headers["user-agent"]) # remove this for unit tests, it varies from one box to another
         request.received_headers["X-Wrap-Input"] = "Input"
     
     def filterResponse(self,request,response):
