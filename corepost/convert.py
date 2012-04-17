@@ -55,13 +55,51 @@ def traverseDict(dictObject):
     
 def generateXml(obj):
     """Generates basic XML from an object that has already been converted for serialization"""
-    if isinstance(object,dict):
-        return str(xmlTemplate.render(item=obj.keys()))
+    if isinstance(obj, dict) or isinstance(obj,DictMixin):
+        return getXML_dict(obj, "item")
     elif isinstance(obj,collections.Iterable):
-        return str(xmlListTemplate.render(items=obj))
+        return "<list>%s</list>" % getXML(obj, "item")
     else:
         raise RuntimeError("Unable to convert to XML: %s" % obj)    
     
 def isClassInstance(obj):
     """Checks if a given obj is a class instance"""
     return getattr(obj, "__class__",None) != None and not isinstance(obj,dict) and not isinstance(obj,tuple) and not isinstance(obj,list) and not isinstance(obj,str)
+
+## {{{ http://code.activestate.com/recipes/440595/ (r2)
+def getXML(obj, objname=None):
+    """getXML(obj, objname=None)
+    returns an object as XML where Python object names are the tags.
+    
+    >>> u={'UserID':10,'Name':'Mark','Group':['Admin','Webmaster']}
+    >>> getXML(u,'User')
+    '<User><UserID>10</UserID><Name>Mark</Name><Group>Admin</Group><Group>Webmaster</Group></User>'
+    """
+    if obj == None:
+        return ""
+    if not objname:
+        objname = "item"
+    adapt={
+        dict: getXML_dict,
+        list: getXML_list,
+        tuple: getXML_list,
+        }
+    if adapt.has_key(obj.__class__):
+        return adapt[obj.__class__](obj, objname)
+    else:
+        return "<%(n)s>%(o)s</%(n)s>"%{'n':objname,'o':str(obj)}
+
+def getXML_dict(indict, objname=None):
+    h = "<%s>"%objname
+    for k, v in indict.items():
+        h += getXML(v, k)
+    h += "</%s>"%objname
+    return h
+
+def getXML_list(inlist, objname=None):
+    h = ""
+    for i in inlist:
+        h += getXML(i, objname)
+    return h
+## end of http://code.activestate.com/recipes/440595/ }}}
+

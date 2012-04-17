@@ -101,6 +101,9 @@ Links
 
 Changelog
 `````````
+* 0.0.16:
+    - minor bug fix for issue #4 (serializing object graphs to XML):
+        https://github.com/jacek99/corepost/issues/3 
 * 0.0.15:
     - minor bug fixes in auto-converting responses to JSON and parsing arguments/paths with unexpectec characters
 * 0.0.14:
@@ -137,7 +140,7 @@ from setuptools import setup
 
 setup(
     name="CorePost",
-    version="0.0.15",
+    version="0.0.16",
     author="Jacek Furmankiewicz",
     author_email="jacek99@gmail.com",
     description=("A Twisted Web REST micro-framework"),
@@ -157,7 +160,7 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     install_requires=[
-         'twisted>=11.0.0',
+         'twisted>=12.0.0',
          'formencode>=1.2.4',
          'pyyaml>=3.1.0',
          'jinja2>=2.6',

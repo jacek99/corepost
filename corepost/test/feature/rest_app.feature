@@ -7,6 +7,9 @@ Feature: REST App
 
 	Background:
 		Given 'rest_resource' is running
+		# make sure it is empty
+		When as user 'None:None' I DELETE 'http://127.0.0.1:8085/customer'
+		Then I expect HTTP code 200
 		# add a few default customers
 		When as user 'None:None' I POST 'http://127.0.0.1:8085/customer' with 'customerId=d1&firstName=John&lastName=Doe1'
 		Then I expect HTTP code 201
@@ -147,4 +150,23 @@ Feature: REST App
 		Then I expect HTTP code 200
 		When as user 'None:None' I GET 'http://127.0.0.1:8085/customer/d1/address/HOME'
 		Then I expect HTTP code 404
+		
+	@customer @xml @issue4
+	Scenario: Customers as XML (Issue #4)
+		# all
+		When I prepare HTTP header 'Accept' = 'application/xml'
+		When as user 'None:None' I GET 'http://127.0.0.1:8085/customer'
+		Then I expect HTTP code 200
+		Then I expect content contains '<list><item><lastName>Doe2</lastName><customerId>d2</customerId><firstName>John</firstName><addresses></addresses></item><item><lastName>Doe3</lastName><customerId>d3</customerId><firstName>John</firstName><addresses></addresses></item><item><lastName>Doe1</lastName><customerId>d1</customerId><firstName>John</firstName><addresses></addresses></item></list>'
+		# 1
+		When I prepare HTTP header 'Accept' = 'application/xml'
+		When as user 'None:None' I GET 'http://127.0.0.1:8085/customer/d2'
+		Then I expect HTTP code 200
+		Then I expect content contains '<item><lastName>Doe2</lastName><customerId>d2</customerId><firstName>John</firstName><addresses></addresses></item>'
+		# 1 with address
+		When as user 'None:None' I POST 'http://127.0.0.1:8085/customer/d2/address' with 'addressId=HOME&streetNumber=100&streetName=MyStreet&stateCode=CA&countryCode=US'
+		When I prepare HTTP header 'Accept' = 'application/xml'
+		When as user 'None:None' I GET 'http://127.0.0.1:8085/customer/d2'
+		Then I expect HTTP code 200
+		Then I expect content contains '<item><lastName>Doe2</lastName><customerId>d2</customerId><firstName>John</firstName><addresses><HOME><countryCode>US</countryCode><streetName>MyStreet</streetName><streetNumber>100</streetNumber><stateCode>CA</stateCode></HOME></addresses></item>'
 		
