@@ -102,9 +102,8 @@ Links
 Changelog
 `````````
 * 0.0.16:
-    - minor bug fix for issue #4 (serializing object graphs to XML):
-        https://github.com/jacek99/corepost/issues/3 
-        As a result removed Jinja2 as a dependency, no longer needed by default
+    - minor bug fix for issue #4 (serializing object graphs to XML), removed Jinja2 as dependency:
+        https://github.com/jacek99/corepost/issues/4
 * 0.0.15:
     - minor bug fixes in auto-converting responses to JSON and parsing arguments/paths with unexpectec characters
 * 0.0.14:
