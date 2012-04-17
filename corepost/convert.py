@@ -7,11 +7,7 @@ for JSON/XML/YAML output
 '''
 
 import collections
-from jinja2 import Template
 from UserDict import DictMixin
-
-xmlListTemplate = Template("""<list>{% for item in items %}<item>{% for prop,val in item.iteritems() %}<{{prop}}>{{val}}</{{prop}}>{% endfor %}</item>{% endfor %}</list>""")
-xmlTemplate = Template("""<item>{% for prop,val in item.iteritems() %}<{{prop}}>{{val}}</{{prop}}>{% endfor %}</item>""")
 
 primitives = (int, long, float, bool, str,unicode)
 

@@ -104,6 +104,7 @@ Changelog
 * 0.0.16:
     - minor bug fix for issue #4 (serializing object graphs to XML):
         https://github.com/jacek99/corepost/issues/3 
+        As a result removed Jinja2 as a dependency, no longer needed by default
 * 0.0.15:
     - minor bug fixes in auto-converting responses to JSON and parsing arguments/paths with unexpectec characters
 * 0.0.14:
@@ -162,8 +163,7 @@ setup(
     install_requires=[
          'twisted>=12.0.0',
          'formencode>=1.2.4',
-         'pyyaml>=3.1.0',
-         'jinja2>=2.6',
+         'pyyaml>=3.1.0'
     ],
     tests_require=[
          'httplib2>=0.7.1',
