@@ -1,0 +1,176 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Returning responses &mdash; CorePost 0.0.16 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.0.16',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CorePost 0.0.16 documentation" href="index.html" />
+    <link rel="next" title="Content types" href="content_types.html" />
+    <link rel="prev" title="HTTP codes" href="http_codes.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="content_types.html" title="Content types"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="http_codes.html" title="HTTP codes"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">CorePost 0.0.16 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="returning-responses">
+<h1>Returning responses<a class="headerlink" href="#returning-responses" title="Permalink to this headline">¶</a></h1>
+<p>There are a number of ways in which you can return a response from a REST service</p>
+<div class="section" id="string">
+<h2>String<a class="headerlink" href="#string" title="Permalink to this headline">¶</a></h2>
+<p>You can simply return a plain text String. CorePost will return the appropriate HTTP code for you:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">GET</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&quot;Hello&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dictionaries-lists-or-classes">
+<h2>Dictionaries, lists or classes<a class="headerlink" href="#dictionaries-lists-or-classes" title="Permalink to this headline">¶</a></h2>
+<p>You can return straight dictionaries:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">GET</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s">&quot;test&quot;</span><span class="p">:</span><span class="s">&quot;test&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>or lists:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">GET</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[{</span><span class="s">&quot;test&quot;</span><span class="p">:</span><span class="s">&quot;test&quot;</span><span class="p">},{</span><span class="s">&quot;test&quot;</span><span class="p">:</span><span class="s">&quot;test2&quot;</span><span class="p">}]</span>
+</pre></div>
+</div>
+<p>or classes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">GET</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">SomeClass</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>CorePost will serialize each of them to the appropriate content type (JSON,YAML or XML), depending on what the caller can accept.</p>
+</div>
+<div class="section" id="response-objects">
+<h2>Response objects<a class="headerlink" href="#response-objects" title="Permalink to this headline">¶</a></h2>
+<p>This option gives you the most control, as you can explicitly specify the response content, headers and HTTP code.
+You need to return an instance of <em>corepost.Response</em> object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Response</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom response object, can be returned instead of raw string response</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span><span class="n">entity</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@route</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="n">Http</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">request</span><span class="p">,</span><span class="n">customerId</span><span class="p">,</span><span class="n">addressId</span><span class="p">,</span><span class="n">streetNumber</span><span class="p">,</span><span class="n">streetName</span><span class="p">,</span><span class="n">stateCode</span><span class="p">,</span><span class="n">countryCode</span><span class="p">):</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">DB</span><span class="o">.</span><span class="n">getCustomer</span><span class="p">(</span><span class="n">customerId</span><span class="p">)</span>
+    <span class="n">address</span> <span class="o">=</span> <span class="n">CustomerAddress</span><span class="p">(</span><span class="n">streetNumber</span><span class="p">,</span><span class="n">streetName</span><span class="p">,</span><span class="n">stateCode</span><span class="p">,</span><span class="n">countryCode</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">addresses</span><span class="p">[</span><span class="n">addressId</span><span class="p">]</span> <span class="o">=</span> <span class="n">address</span>
+    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="mi">201</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Returning responses</a><ul>
+<li><a class="reference internal" href="#string">String</a></li>
+<li><a class="reference internal" href="#dictionaries-lists-or-classes">Dictionaries, lists or classes</a></li>
+<li><a class="reference internal" href="#response-objects">Response objects</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="http_codes.html"
+                        title="previous chapter">HTTP codes</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="content_types.html"
+                        title="next chapter">Content types</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/responses.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="content_types.html" title="Content types"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="http_codes.html" title="HTTP codes"
+             >previous</a> |</li>
+        <li><a href="index.html">CorePost 0.0.16 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Jacek Furmankiewicz.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

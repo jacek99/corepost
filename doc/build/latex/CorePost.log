@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.3.27)  17 APR 2012 16:18
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.3.27)  20 APR 2012 15:28
 entering extended mode
  %&-line parsing enabled.
 **CorePost.tex
@@ -904,33 +904,33 @@ LaTeX Font Info:    Font shape `T1/pcr/m/it' in size <9> not available
 
 ] [4] [5] [6] [7]
 [8] [9]
-Underfull \vbox (badness 10000) detected at line 750
+Underfull \vbox (badness 10000) detected at line 740
  []
 
 
-Underfull \vbox (badness 10000) detected at line 750
+Underfull \vbox (badness 10000) detected at line 740
  []
 
-[10] (./CorePost.ind) [11] (./CorePost.aux) ) 
+[10] [11] (./CorePost.ind) [12] (./CorePost.aux) ) 
 Here is how much of TeX's memory you used:
- 7981 strings out of 493848
- 108170 string characters out of 1152823
- 197503 words of memory out of 3000000
- 11019 multiletter control sequences out of 15000+50000
+ 7992 strings out of 493848
+ 108383 string characters out of 1152823
+ 197759 words of memory out of 3000000
+ 11025 multiletter control sequences out of 15000+50000
  55793 words of font info for 63 fonts, out of 3000000 for 9000
  715 hyphenation exceptions out of 8191
  45i,12n,45p,426b,381s stack positions out of 5000i,500n,10000p,200000b,50000s
-{/usr/share/texmf-texlive/fonts/en
-c/dvips/base/8r.enc}</usr/share/texmf-texlive/fonts/type1/urw/courier/ucrb8a.pf
-b></usr/share/texmf-texlive/fonts/type1/urw/courier/ucrr8a.pfb></usr/share/texm
-f-texlive/fonts/type1/urw/courier/ucrro8a.pfb></usr/share/texmf-texlive/fonts/t
-ype1/urw/helvetic/uhvb8a.pfb></usr/share/texmf-texlive/fonts/type1/urw/helvetic
-/uhvbo8a.pfb></usr/share/texmf-texlive/fonts/type1/urw/times/utmb8a.pfb></usr/s
-hare/texmf-texlive/fonts/type1/urw/times/utmr8a.pfb></usr/share/texmf-texlive/f
-onts/type1/urw/times/utmri8a.pfb>
-Output written on CorePost.pdf (15 pages, 149328 bytes).
+{/usr/share/texmf-texlive/fon
+ts/enc/dvips/base/8r.enc}</usr/share/texmf-texlive/fonts/type1/urw/courier/ucrb
+8a.pfb></usr/share/texmf-texlive/fonts/type1/urw/courier/ucrr8a.pfb></usr/share
+/texmf-texlive/fonts/type1/urw/courier/ucrro8a.pfb></usr/share/texmf-texlive/fo
+nts/type1/urw/helvetic/uhvb8a.pfb></usr/share/texmf-texlive/fonts/type1/urw/hel
+vetic/uhvbo8a.pfb></usr/share/texmf-texlive/fonts/type1/urw/times/utmb8a.pfb></
+usr/share/texmf-texlive/fonts/type1/urw/times/utmr8a.pfb></usr/share/texmf-texl
+ive/fonts/type1/urw/times/utmri8a.pfb>
+Output written on CorePost.pdf (16 pages, 153055 bytes).
 PDF statistics:
- 192 PDF objects out of 1000 (max. 8388607)
- 42 named destinations out of 1000 (max. 500000)
- 89 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 205 PDF objects out of 1000 (max. 8388607)
+ 47 named destinations out of 1000 (max. 500000)
+ 97 words of extra memory for PDF output out of 10000 (max. 10000000)
 

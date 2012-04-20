@@ -13,8 +13,8 @@
 
 
 \title{CorePost Documentation}
-\date{April 17, 2012}
-\release{0.0.14}
+\date{April 20, 2012}
+\release{0.0.16}
 \author{Jacek Furmankiewicz}
 \newcommand{\sphinxlogo}{}
 \renewcommand{\releasename}{Release}
@@ -438,6 +438,108 @@ National : \href{http://www.formencode.org/en/latest/modules/national.html\#modu
 \end{itemize}
 
 
+\section{HTTP codes}
+\label{http_codes::doc}\label{http_codes:http-codes}
+By default, CorePost returns the appropriate HTTP code based on the HTTP method:
+
+Success:
+\begin{itemize}
+\item {} 
+200 (OK) - GET, DELETE, PUT
+
+\item {} 
+201 (Created) - POST
+
+\end{itemize}
+
+Errors:
+\begin{itemize}
+\item {} 
+404 - not able to match any URL.
+
+\item {} 
+400 - missing mandatory argument (driven from the arguments on the actual functions)
+
+\item {} 
+400 - argument failed validation
+
+\item {} 
+500 - server error
+
+\end{itemize}
+
+
+\section{Returning responses}
+\label{responses::doc}\label{responses:returning-responses}
+There are a number of ways in which you can return a response from a REST service
+
+
+\subsection{String}
+\label{responses:string}
+You can simply return a plain text String. CorePost will return the appropriate HTTP code for you:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nd}{@route}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{/}\PYG{l+s}{"}\PYG{p}{,}\PYG{n}{Http}\PYG{o}{.}\PYG{n}{GET}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{root}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{o}{*}\PYG{o}{*}\PYG{n}{kwargs}\PYG{p}{)}\PYG{p}{:}
+    \PYG{k}{return} \PYG{l+s}{"}\PYG{l+s}{Hello}\PYG{l+s}{"}
+\end{Verbatim}
+
+
+\subsection{Dictionaries, lists or classes}
+\label{responses:dictionaries-lists-or-classes}
+You can return straight dictionaries:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nd}{@route}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{/}\PYG{l+s}{"}\PYG{p}{,}\PYG{n}{Http}\PYG{o}{.}\PYG{n}{GET}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{root}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{o}{*}\PYG{o}{*}\PYG{n}{kwargs}\PYG{p}{)}\PYG{p}{:}
+    \PYG{k}{return} \PYG{p}{\PYGZob{}}\PYG{l+s}{"}\PYG{l+s}{test}\PYG{l+s}{"}\PYG{p}{:}\PYG{l+s}{"}\PYG{l+s}{test}\PYG{l+s}{"}\PYG{p}{\PYGZcb{}}
+\end{Verbatim}
+
+or lists:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nd}{@route}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{/}\PYG{l+s}{"}\PYG{p}{,}\PYG{n}{Http}\PYG{o}{.}\PYG{n}{GET}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{root}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{o}{*}\PYG{o}{*}\PYG{n}{kwargs}\PYG{p}{)}\PYG{p}{:}
+    \PYG{k}{return} \PYG{p}{[}\PYG{p}{\PYGZob{}}\PYG{l+s}{"}\PYG{l+s}{test}\PYG{l+s}{"}\PYG{p}{:}\PYG{l+s}{"}\PYG{l+s}{test}\PYG{l+s}{"}\PYG{p}{\PYGZcb{}}\PYG{p}{,}\PYG{p}{\PYGZob{}}\PYG{l+s}{"}\PYG{l+s}{test}\PYG{l+s}{"}\PYG{p}{:}\PYG{l+s}{"}\PYG{l+s}{test2}\PYG{l+s}{"}\PYG{p}{\PYGZcb{}}\PYG{p}{]}
+\end{Verbatim}
+
+or classes:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nd}{@route}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{/}\PYG{l+s}{"}\PYG{p}{,}\PYG{n}{Http}\PYG{o}{.}\PYG{n}{GET}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{root}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{o}{*}\PYG{o}{*}\PYG{n}{kwargs}\PYG{p}{)}\PYG{p}{:}
+    \PYG{k}{return} \PYG{n}{SomeClass}\PYG{p}{(}\PYG{p}{)}
+\end{Verbatim}
+
+CorePost will serialize each of them to the appropriate content type (JSON,YAML or XML), depending on what the caller can accept.
+
+
+\subsection{Response objects}
+\label{responses:response-objects}
+This option gives you the most control, as you can explicitly specify the response content, headers and HTTP code.
+You need to return an instance of \emph{corepost.Response} object:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{class} \PYG{n+nc}{Response}\PYG{p}{:}
+    \PYG{l+s+sd}{"""}
+\PYG{l+s+sd}{    Custom response object, can be returned instead of raw string response}
+\PYG{l+s+sd}{    """}
+    \PYG{k}{def} \PYG{n+nf}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{code}\PYG{o}{=}\PYG{l+m+mi}{200}\PYG{p}{,}\PYG{n}{entity}\PYG{o}{=}\PYG{n+nb+bp}{None}\PYG{p}{,}\PYG{n}{headers}\PYG{o}{=}\PYG{p}{\PYGZob{}}\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{:}
+        \PYG{k}{pass}
+\end{Verbatim}
+
+Example:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nd}{@route}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{/}\PYG{l+s}{"}\PYG{p}{,}\PYG{n}{Http}\PYG{o}{.}\PYG{n}{POST}\PYG{p}{)}
+\PYG{k}{def} \PYG{n+nf}{post}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{n}{customerId}\PYG{p}{,}\PYG{n}{addressId}\PYG{p}{,}\PYG{n}{streetNumber}\PYG{p}{,}\PYG{n}{streetName}\PYG{p}{,}\PYG{n}{stateCode}\PYG{p}{,}\PYG{n}{countryCode}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{c} \PYG{o}{=} \PYG{n}{DB}\PYG{o}{.}\PYG{n}{getCustomer}\PYG{p}{(}\PYG{n}{customerId}\PYG{p}{)}
+    \PYG{n}{address} \PYG{o}{=} \PYG{n}{CustomerAddress}\PYG{p}{(}\PYG{n}{streetNumber}\PYG{p}{,}\PYG{n}{streetName}\PYG{p}{,}\PYG{n}{stateCode}\PYG{p}{,}\PYG{n}{countryCode}\PYG{p}{)}
+    \PYG{n}{c}\PYG{o}{.}\PYG{n}{addresses}\PYG{p}{[}\PYG{n}{addressId}\PYG{p}{]} \PYG{o}{=} \PYG{n}{address}
+    \PYG{k}{return} \PYG{n}{Response}\PYG{p}{(}\PYG{l+m+mi}{201}\PYG{p}{)}
+\end{Verbatim}
+
+
 \section{Content types}
 \label{content_types::doc}\label{content_types:content-types}
 CorePost integrates support for JSON, YAML and XML (partially) based on request content types.
@@ -500,118 +602,6 @@ Calling it with ``Accept: text/yaml'' will return:
 \PYG{o}{-} \PYG{p}{\PYGZob{}}\PYG{n}{test1}\PYG{p}{:} \PYG{n}{Test1}\PYG{p}{\PYGZcb{}}
 \PYG{o}{-} \PYG{p}{\PYGZob{}}\PYG{n}{test2}\PYG{p}{:} \PYG{n}{Test2}\PYG{p}{\PYGZcb{}}
 \end{Verbatim}
-
-
-\section{Filters}
-\label{filters::doc}\label{filters:filters}
-There is support for CorePost resource filters via the two following \emph{corepost.filter} interfaces:
-
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{k}{class} \PYG{n+nc}{IRequestFilter}\PYG{p}{(}\PYG{n}{Interface}\PYG{p}{)}\PYG{p}{:}
-    \PYG{l+s+sd}{"""Request filter interface"""}
-    \PYG{k}{def} \PYG{n+nf}{filterRequest}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{)}\PYG{p}{:}
-        \PYG{l+s+sd}{"""Allows to intercept and change an incoming request"""}
-        \PYG{k}{pass}
-
-\PYG{k}{class} \PYG{n+nc}{IResponseFilter}\PYG{p}{(}\PYG{n}{Interface}\PYG{p}{)}\PYG{p}{:}
-    \PYG{l+s+sd}{"""Response filter interface"""}
-    \PYG{k}{def} \PYG{n+nf}{filterResponse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{n}{response}\PYG{p}{)}\PYG{p}{:}
-        \PYG{l+s+sd}{"""Allows to intercept and change an outgoing response"""}
-        \PYG{k}{pass}
-\end{Verbatim}
-
-A filter class can implement either of them or both (for a wrap around filter), e.g.:
-
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{k}{class} \PYG{n+nc}{AddCustomHeaderFilter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{:}
-    \PYG{l+s+sd}{"""Implements a request filter that adds a custom header to the incoming request"""}
-    \PYG{n}{zope}\PYG{o}{.}\PYG{n}{interface}\PYG{o}{.}\PYG{n}{implements}\PYG{p}{(}\PYG{n}{IRequestFilter}\PYG{p}{)}
-
-    \PYG{k}{def} \PYG{n+nf}{filterRequest}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{)}\PYG{p}{:}
-        \PYG{n}{request}\PYG{o}{.}\PYG{n}{received\PYGZus{}headers}\PYG{p}{[}\PYG{l+s}{"}\PYG{l+s}{Custom-Header}\PYG{l+s}{"}\PYG{p}{]} \PYG{o}{=} \PYG{l+s}{"}\PYG{l+s}{Custom Header Value}\PYG{l+s}{"}
-
-\PYG{k}{class} \PYG{n+nc}{Change404to503Filter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{:}
-    \PYG{l+s+sd}{"""Implements just a response filter that changes 404 to 503 statuses"""}
-    \PYG{n}{zope}\PYG{o}{.}\PYG{n}{interface}\PYG{o}{.}\PYG{n}{implements}\PYG{p}{(}\PYG{n}{IResponseFilter}\PYG{p}{)}
-
-    \PYG{k}{def} \PYG{n+nf}{filterResponse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{n}{response}\PYG{p}{)}\PYG{p}{:}
-        \PYG{k}{if} \PYG{n}{response}\PYG{o}{.}\PYG{n}{code} \PYG{o}{==} \PYG{l+m+mi}{404}\PYG{p}{:}
-            \PYG{n}{response}\PYG{o}{.}\PYG{n}{code} \PYG{o}{=} \PYG{l+m+mi}{503}
-
-\PYG{k}{class} \PYG{n+nc}{WrapAroundFilter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{:}
-    \PYG{l+s+sd}{"""Implements both types of filters in one class"""}
-    \PYG{n}{zope}\PYG{o}{.}\PYG{n}{interface}\PYG{o}{.}\PYG{n}{implements}\PYG{p}{(}\PYG{n}{IRequestFilter}\PYG{p}{,}\PYG{n}{IResponseFilter}\PYG{p}{)}
-
-    \PYG{k}{def} \PYG{n+nf}{filterRequest}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{)}\PYG{p}{:}
-        \PYG{n}{request}\PYG{o}{.}\PYG{n}{received\PYGZus{}headers}\PYG{p}{[}\PYG{l+s}{"}\PYG{l+s}{X-Wrap-Input}\PYG{l+s}{"}\PYG{p}{]} \PYG{o}{=} \PYG{l+s}{"}\PYG{l+s}{Input}\PYG{l+s}{"}
-
-    \PYG{k}{def} \PYG{n+nf}{filterResponse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{n}{response}\PYG{p}{)}\PYG{p}{:}
-        \PYG{n}{response}\PYG{o}{.}\PYG{n}{headers}\PYG{p}{[}\PYG{l+s}{"}\PYG{l+s}{X-Wrap-Output}\PYG{l+s}{"}\PYG{p}{]} \PYG{o}{=} \PYG{l+s}{"}\PYG{l+s}{Output}\PYG{l+s}{"}
-\end{Verbatim}
-
-In order to activate the filters on a RESTResource instance, you need to pass a list of them in the constructor as the \emph{filters} parameter, e.g.:
-
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{k}{class} \PYG{n+nc}{FilterApp}\PYG{p}{:}
-
-    \PYG{n+nd}{@route}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{/}\PYG{l+s}{"}\PYG{p}{,}\PYG{n}{Http}\PYG{o}{.}\PYG{n}{GET}\PYG{p}{)}
-    \PYG{k}{def} \PYG{n+nf}{root}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{o}{*}\PYG{o}{*}\PYG{n}{kwargs}\PYG{p}{)}\PYG{p}{:}
-        \PYG{k}{return} \PYG{n}{request}\PYG{o}{.}\PYG{n}{received\PYGZus{}headers}
-
-\PYG{k}{def} \PYG{n+nf}{run\PYGZus{}filter\PYGZus{}app}\PYG{p}{(}\PYG{p}{)}\PYG{p}{:}
-    \PYG{n}{app} \PYG{o}{=} \PYG{n}{RESTResource}\PYG{p}{(}\PYG{n}{services}\PYG{o}{=}\PYG{p}{(}\PYG{n}{FilterApp}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}\PYG{p}{)}\PYG{p}{,}\PYG{n}{filters}\PYG{o}{=}\PYG{p}{(}\PYG{n}{Change404to503Filter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}\PYG{n}{AddCustomHeaderFilter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}\PYG{n}{WrapAroundFilter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}\PYG{p}{)}\PYG{p}{)}
-    \PYG{n}{app}\PYG{o}{.}\PYG{n}{run}\PYG{p}{(}\PYG{l+m+mi}{8083}\PYG{p}{)}
-\end{Verbatim}
-
-
-\section{HTTP codes}
-\label{http_codes::doc}\label{http_codes:http-codes}
-By default, CorePost returns the appropriate HTTP code based on the HTTP method:
-
-Success:
-\begin{itemize}
-\item {} 
-200 (OK) - GET, DELETE, PUT
-
-\item {} 
-201 (Created) - POST
-
-\end{itemize}
-
-Errors:
-\begin{itemize}
-\item {} 
-404 - not able to match any URL.
-
-\item {} 
-400 - missing mandatory argument (driven from the arguments on the actual functions)
-
-\item {} 
-400 - argument failed validation
-
-\item {} 
-500 - server error
-
-\end{itemize}
-
-
-\section{Asynchronous Operations}
-\label{async:asynchronous-operations}\label{async::doc}
-
-\subsection{@defer.inlineCallbacks support}
-\label{async:defer-inlinecallbacks-support}
-If you want a deferred async method, just use \emph{defer.returnValue()}:
-
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n+nd}{@route}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{/}\PYG{l+s}{"}\PYG{p}{,}\PYG{n}{Http}\PYG{o}{.}\PYG{n}{GET}\PYG{p}{)}
-\PYG{n+nd}{@defer.inlineCallbacks}
-\PYG{k}{def} \PYG{n+nf}{root}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{o}{*}\PYG{o}{*}\PYG{n}{kwargs}\PYG{p}{)}\PYG{p}{:}
-        \PYG{n}{val1} \PYG{o}{=} \PYG{k}{yield} \PYG{n}{db}\PYG{o}{.}\PYG{n}{query}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{SELECT ....}\PYG{l+s}{"}\PYG{p}{)}
-        \PYG{n}{val2} \PYG{o}{=} \PYG{k}{yield} \PYG{n}{db}\PYG{o}{.}\PYG{n}{query}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{SELECT ....}\PYG{l+s}{"}\PYG{p}{)}
-        \PYG{n}{defer}\PYG{o}{.}\PYG{n}{returnValue}\PYG{p}{(}\PYG{n}{val1} \PYG{o}{+} \PYG{n}{val2}\PYG{p}{)}
-\end{Verbatim}
-
-This is standard Twisted functionality.
 
 
 \section{Modular REST applications}
@@ -748,6 +738,87 @@ Here is a full-blown example of two REST services for Customer and Customer Addr
 \PYG{k}{if} \PYG{n}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}} \PYG{o}{==} \PYG{l+s}{"}\PYG{l+s}{\PYGZus{}\PYGZus{}main\PYGZus{}\PYGZus{}}\PYG{l+s}{"}\PYG{p}{:}
     \PYG{n}{run\PYGZus{}rest\PYGZus{}app}\PYG{p}{(}\PYG{p}{)}
 \end{Verbatim}
+
+
+\section{Filters}
+\label{filters::doc}\label{filters:filters}
+There is support for CorePost resource filters via the two following \emph{corepost.filter} interfaces:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{class} \PYG{n+nc}{IRequestFilter}\PYG{p}{(}\PYG{n}{Interface}\PYG{p}{)}\PYG{p}{:}
+    \PYG{l+s+sd}{"""Request filter interface"""}
+    \PYG{k}{def} \PYG{n+nf}{filterRequest}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{)}\PYG{p}{:}
+        \PYG{l+s+sd}{"""Allows to intercept and change an incoming request"""}
+        \PYG{k}{pass}
+
+\PYG{k}{class} \PYG{n+nc}{IResponseFilter}\PYG{p}{(}\PYG{n}{Interface}\PYG{p}{)}\PYG{p}{:}
+    \PYG{l+s+sd}{"""Response filter interface"""}
+    \PYG{k}{def} \PYG{n+nf}{filterResponse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{n}{response}\PYG{p}{)}\PYG{p}{:}
+        \PYG{l+s+sd}{"""Allows to intercept and change an outgoing response"""}
+        \PYG{k}{pass}
+\end{Verbatim}
+
+A filter class can implement either of them or both (for a wrap around filter), e.g.:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{class} \PYG{n+nc}{AddCustomHeaderFilter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{:}
+    \PYG{l+s+sd}{"""Implements a request filter that adds a custom header to the incoming request"""}
+    \PYG{n}{zope}\PYG{o}{.}\PYG{n}{interface}\PYG{o}{.}\PYG{n}{implements}\PYG{p}{(}\PYG{n}{IRequestFilter}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{filterRequest}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{)}\PYG{p}{:}
+        \PYG{n}{request}\PYG{o}{.}\PYG{n}{received\PYGZus{}headers}\PYG{p}{[}\PYG{l+s}{"}\PYG{l+s}{Custom-Header}\PYG{l+s}{"}\PYG{p}{]} \PYG{o}{=} \PYG{l+s}{"}\PYG{l+s}{Custom Header Value}\PYG{l+s}{"}
+
+\PYG{k}{class} \PYG{n+nc}{Change404to503Filter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{:}
+    \PYG{l+s+sd}{"""Implements just a response filter that changes 404 to 503 statuses"""}
+    \PYG{n}{zope}\PYG{o}{.}\PYG{n}{interface}\PYG{o}{.}\PYG{n}{implements}\PYG{p}{(}\PYG{n}{IResponseFilter}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{filterResponse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{n}{response}\PYG{p}{)}\PYG{p}{:}
+        \PYG{k}{if} \PYG{n}{response}\PYG{o}{.}\PYG{n}{code} \PYG{o}{==} \PYG{l+m+mi}{404}\PYG{p}{:}
+            \PYG{n}{response}\PYG{o}{.}\PYG{n}{code} \PYG{o}{=} \PYG{l+m+mi}{503}
+
+\PYG{k}{class} \PYG{n+nc}{WrapAroundFilter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{:}
+    \PYG{l+s+sd}{"""Implements both types of filters in one class"""}
+    \PYG{n}{zope}\PYG{o}{.}\PYG{n}{interface}\PYG{o}{.}\PYG{n}{implements}\PYG{p}{(}\PYG{n}{IRequestFilter}\PYG{p}{,}\PYG{n}{IResponseFilter}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf}{filterRequest}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{)}\PYG{p}{:}
+        \PYG{n}{request}\PYG{o}{.}\PYG{n}{received\PYGZus{}headers}\PYG{p}{[}\PYG{l+s}{"}\PYG{l+s}{X-Wrap-Input}\PYG{l+s}{"}\PYG{p}{]} \PYG{o}{=} \PYG{l+s}{"}\PYG{l+s}{Input}\PYG{l+s}{"}
+
+    \PYG{k}{def} \PYG{n+nf}{filterResponse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{n}{response}\PYG{p}{)}\PYG{p}{:}
+        \PYG{n}{response}\PYG{o}{.}\PYG{n}{headers}\PYG{p}{[}\PYG{l+s}{"}\PYG{l+s}{X-Wrap-Output}\PYG{l+s}{"}\PYG{p}{]} \PYG{o}{=} \PYG{l+s}{"}\PYG{l+s}{Output}\PYG{l+s}{"}
+\end{Verbatim}
+
+In order to activate the filters on a RESTResource instance, you need to pass a list of them in the constructor as the \emph{filters} parameter, e.g.:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{class} \PYG{n+nc}{FilterApp}\PYG{p}{:}
+
+    \PYG{n+nd}{@route}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{/}\PYG{l+s}{"}\PYG{p}{,}\PYG{n}{Http}\PYG{o}{.}\PYG{n}{GET}\PYG{p}{)}
+    \PYG{k}{def} \PYG{n+nf}{root}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{o}{*}\PYG{o}{*}\PYG{n}{kwargs}\PYG{p}{)}\PYG{p}{:}
+        \PYG{k}{return} \PYG{n}{request}\PYG{o}{.}\PYG{n}{received\PYGZus{}headers}
+
+\PYG{k}{def} \PYG{n+nf}{run\PYGZus{}filter\PYGZus{}app}\PYG{p}{(}\PYG{p}{)}\PYG{p}{:}
+    \PYG{n}{app} \PYG{o}{=} \PYG{n}{RESTResource}\PYG{p}{(}\PYG{n}{services}\PYG{o}{=}\PYG{p}{(}\PYG{n}{FilterApp}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}\PYG{p}{)}\PYG{p}{,}\PYG{n}{filters}\PYG{o}{=}\PYG{p}{(}\PYG{n}{Change404to503Filter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}\PYG{n}{AddCustomHeaderFilter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}\PYG{n}{WrapAroundFilter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{,}\PYG{p}{)}\PYG{p}{)}
+    \PYG{n}{app}\PYG{o}{.}\PYG{n}{run}\PYG{p}{(}\PYG{l+m+mi}{8083}\PYG{p}{)}
+\end{Verbatim}
+
+
+\section{Asynchronous Operations}
+\label{async:asynchronous-operations}\label{async::doc}
+
+\subsection{@defer.inlineCallbacks support}
+\label{async:defer-inlinecallbacks-support}
+If you want a deferred async method, just use \emph{defer.returnValue()}:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nd}{@route}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{/}\PYG{l+s}{"}\PYG{p}{,}\PYG{n}{Http}\PYG{o}{.}\PYG{n}{GET}\PYG{p}{)}
+\PYG{n+nd}{@defer.inlineCallbacks}
+\PYG{k}{def} \PYG{n+nf}{root}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{request}\PYG{p}{,}\PYG{o}{*}\PYG{o}{*}\PYG{n}{kwargs}\PYG{p}{)}\PYG{p}{:}
+        \PYG{n}{val1} \PYG{o}{=} \PYG{k}{yield} \PYG{n}{db}\PYG{o}{.}\PYG{n}{query}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{SELECT ....}\PYG{l+s}{"}\PYG{p}{)}
+        \PYG{n}{val2} \PYG{o}{=} \PYG{k}{yield} \PYG{n}{db}\PYG{o}{.}\PYG{n}{query}\PYG{p}{(}\PYG{l+s}{"}\PYG{l+s}{SELECT ....}\PYG{l+s}{"}\PYG{p}{)}
+        \PYG{n}{defer}\PYG{o}{.}\PYG{n}{returnValue}\PYG{p}{(}\PYG{n}{val1} \PYG{o}{+} \PYG{n}{val2}\PYG{p}{)}
+\end{Verbatim}
+
+This is standard Twisted functionality.
 
 
 

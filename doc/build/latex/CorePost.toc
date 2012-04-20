@@ -17,11 +17,15 @@
 \contentsline {subsection}{\numberline {2.2.4}YAML document arguments}{5}{subsection.2.2.4}
 \contentsline {subsection}{\numberline {2.2.5}XML document arguments}{5}{subsection.2.2.5}
 \contentsline {section}{\numberline {2.3}Argument validation}{6}{section.2.3}
-\contentsline {section}{\numberline {2.4}Content types}{6}{section.2.4}
-\contentsline {subsection}{\numberline {2.4.1}Parsing of incoming content}{6}{subsection.2.4.1}
-\contentsline {subsection}{\numberline {2.4.2}Converting Python objects to expected content type}{7}{subsection.2.4.2}
-\contentsline {section}{\numberline {2.5}Filters}{7}{section.2.5}
-\contentsline {section}{\numberline {2.6}HTTP codes}{8}{section.2.6}
-\contentsline {section}{\numberline {2.7}Asynchronous Operations}{8}{section.2.7}
-\contentsline {subsection}{\numberline {2.7.1}@defer.inlineCallbacks support}{8}{subsection.2.7.1}
-\contentsline {section}{\numberline {2.8}Modular REST applications}{9}{section.2.8}
+\contentsline {section}{\numberline {2.4}HTTP codes}{6}{section.2.4}
+\contentsline {section}{\numberline {2.5}Returning responses}{7}{section.2.5}
+\contentsline {subsection}{\numberline {2.5.1}String}{7}{subsection.2.5.1}
+\contentsline {subsection}{\numberline {2.5.2}Dictionaries, lists or classes}{7}{subsection.2.5.2}
+\contentsline {subsection}{\numberline {2.5.3}Response objects}{7}{subsection.2.5.3}
+\contentsline {section}{\numberline {2.6}Content types}{8}{section.2.6}
+\contentsline {subsection}{\numberline {2.6.1}Parsing of incoming content}{8}{subsection.2.6.1}
+\contentsline {subsection}{\numberline {2.6.2}Converting Python objects to expected content type}{8}{subsection.2.6.2}
+\contentsline {section}{\numberline {2.7}Modular REST applications}{8}{section.2.7}
+\contentsline {section}{\numberline {2.8}Filters}{11}{section.2.8}
+\contentsline {section}{\numberline {2.9}Asynchronous Operations}{12}{section.2.9}
+\contentsline {subsection}{\numberline {2.9.1}@defer.inlineCallbacks support}{12}{subsection.2.9.1}

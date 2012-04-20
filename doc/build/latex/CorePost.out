@@ -4,8 +4,9 @@
 \BOOKMARK [1][-]{section.2.1}{URL Routing}{chapter.2}
 \BOOKMARK [1][-]{section.2.2}{Argument parsing}{chapter.2}
 \BOOKMARK [1][-]{section.2.3}{Argument validation}{chapter.2}
-\BOOKMARK [1][-]{section.2.4}{Content types}{chapter.2}
-\BOOKMARK [1][-]{section.2.5}{Filters}{chapter.2}
-\BOOKMARK [1][-]{section.2.6}{HTTP codes}{chapter.2}
-\BOOKMARK [1][-]{section.2.7}{Asynchronous Operations}{chapter.2}
-\BOOKMARK [1][-]{section.2.8}{Modular REST applications}{chapter.2}
+\BOOKMARK [1][-]{section.2.4}{HTTP codes}{chapter.2}
+\BOOKMARK [1][-]{section.2.5}{Returning responses}{chapter.2}
+\BOOKMARK [1][-]{section.2.6}{Content types}{chapter.2}
+\BOOKMARK [1][-]{section.2.7}{Modular REST applications}{chapter.2}
+\BOOKMARK [1][-]{section.2.8}{Filters}{chapter.2}
+\BOOKMARK [1][-]{section.2.9}{Asynchronous Operations}{chapter.2}
