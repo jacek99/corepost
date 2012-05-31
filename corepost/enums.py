@@ -4,20 +4,26 @@ Common enums
 @author: jacekf
 '''
 
+
 class Http:
     """Enumerates HTTP methods"""
     GET = "GET"
     POST = "POST"
     PUT = "PUT"
     DELETE = "DELETE"
+    OPTIONS = "OPTIONS"
+    HEAD = "HEAD"
+    PATCH = "PATCH"
+
 
 class HttpHeader:
     """Enumerates common HTTP headers"""
     CONTENT_TYPE = "content-type"
     ACCEPT = "accept"
 
+
 class MediaType:
-    """Enumerates media types"""    
+    """Enumerates media types"""
     WILDCARD = "*/*"
     APPLICATION_XML = "application/xml"
     APPLICATION_ATOM_XML = "application/atom+xml"

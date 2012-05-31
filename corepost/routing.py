@@ -7,16 +7,24 @@ Common routing classes, regardless of whether used in HTTP or multiprocess conte
 from collections import defaultdict
 from corepost import Response, RESTException
 from corepost.enums import Http, HttpHeader
-from corepost.utils import getMandatoryArgumentNames, convertToJson, safeDictUpdate
-from corepost.convert import convertForSerialization, generateXml
+from corepost.utils import getMandatoryArgumentNames, safeDictUpdate
+from corepost.convert import convertForSerialization, generateXml, convertToJson
 from corepost.filters import IRequestFilter, IResponseFilter
 
 from enums import MediaType
 from twisted.internet import defer
 from twisted.web.http import parse_qs
 from twisted.python import log
-import re, copy, exceptions, json, yaml, logging
+import re, copy, exceptions, yaml, logging
 from xml.etree import ElementTree
+
+advanced_json = False
+try:
+    import jsonpickle
+    advanced_json = True
+except ImportError:
+    import json
+
 
 class UrlRouter:
     ''' Common class for containing info related to routing a request to a function '''
@@ -140,8 +148,8 @@ class RequestRouter:
         '''
         Constructor
         '''
-        self.__urls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict)}
-        self.__cachedUrls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict)}
+        self.__urls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict),Http.OPTIONS: defaultdict(dict),Http.PATCH: defaultdict(dict),Http.HEAD: defaultdict(dict)}
+        self.__cachedUrls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict),Http.OPTIONS: defaultdict(dict),Http.PATCH: defaultdict(dict),Http.HEAD: defaultdict(dict)}
         self.__urlRouterInstances = {}
         self.__schema = schema
         self.__registerRouters(restServiceContainer)
@@ -167,7 +175,7 @@ class RequestRouter:
     def path(self):
         return self.__path    
 
-    def __registerRouters(self,restServiceContainer):
+    def __registerRouters(self, restServiceContainer):
         """Main method responsible for registering routers"""
         from types import FunctionType
         
@@ -182,15 +190,17 @@ class RequestRouter:
                     
                     # if specified, add class path to each function's path
                     rq = func.corepostRequestRouter
-                    rq.url = "%s%s" % (rootPath,rq.url)
-                    # remove first and trailing '/' to standardize URLs
-                    start = 1 if rq.url[0:1] == "/" else 0
-                    end =  -1 if rq.url[len(rq.url) -1] == '/' else len(rq.url)
-                    rq.url = rq.url[start:end]
-                     
+                    #workaround for multiple passes of __registerRouters (for unit tests etc)
+                    if not hasattr(rq, 'urlAdapted'):
+                        rq.url = "%s%s" % (rootPath,rq.url)
+                        # remove first and trailing '/' to standardize URLs
+                        start = 1 if rq.url[0:1] == "/" else 0
+                        end =  -1 if rq.url[len(rq.url) -1] == '/' else len(rq.url)
+                        rq.url = rq.url[start:end]
+                        setattr(rq,'urlAdapted',True)
+                        
                     # now that the full URL is set, compile the matcher for it
                     rq.compileMatcherForFullUrl()
-                    
                     for method in rq.methods:
                         for accepts in rq.accepts:
                             urlRouterInstance = UrlRouterInstance(service,rq)
@@ -285,7 +295,10 @@ class RequestRouter:
                 except Exception as ex:
                     log.err(ex)
                     response =  self.__createErrorResponse(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))                
-                
+            
+            #if a url is defined, but not the requested method             
+            elif self.__urls[request.method].get(path, {}) == {}:
+                response = self.__createErrorResponse(request,501, "")
             else:
                 log.msg("URL %s not found" % path,logLevel=logging.WARN)
                 response = self.__createErrorResponse(request,404,"URL '%s' not found\n" % request.path)
@@ -305,9 +318,7 @@ class RequestRouter:
         Takes care of automatically rendering the response and converting it to appropriate format (text,XML,JSON,YAML)
         depending on what the caller can accept. Returns Response
         """
-        if isinstance(response, str):
-            return Response(code,response,{HttpHeader.CONTENT_TYPE: MediaType.TEXT_PLAIN})
-        elif isinstance(response, Response):
+        if isinstance(response, Response):
             return response
         else:
             (content,contentType) = self.__convertObjectToContentType(request, response)
@@ -318,20 +329,27 @@ class RequestRouter:
         Takes care of converting an object (non-String) response to the appropriate format, based on the what the caller can accept.
         Returns a tuple of (content,contentType)
         """
-        obj = convertForSerialization(obj)
-        
+
         if HttpHeader.ACCEPT in request.received_headers:
             accept = request.received_headers[HttpHeader.ACCEPT]
             if MediaType.APPLICATION_JSON in accept:
+                if not advanced_json:
+                    obj = convertForSerialization(obj)
                 return (convertToJson(obj),MediaType.APPLICATION_JSON)
             elif MediaType.TEXT_YAML in accept:
+                obj = convertForSerialization(obj)
                 return (yaml.dump(obj),MediaType.TEXT_YAML)
             elif MediaType.APPLICATION_XML in accept or MediaType.TEXT_XML in accept:
+                obj = convertForSerialization(obj)
                 return (generateXml(obj),MediaType.APPLICATION_XML)
             else:
                 # no idea, let's do JSON
+                if not advanced_json:
+                    obj = convertForSerialization(obj)
                 return (convertToJson(obj),MediaType.APPLICATION_JSON)
         else:
+            if not advanced_json:
+                obj = convertForSerialization(obj)
             # called has no accept header, let's default to JSON
             return (convertToJson(obj),MediaType.APPLICATION_JSON)
 
@@ -352,7 +370,7 @@ class RequestRouter:
         """Finishes any Defered/inlineCallback methods that raised an error. Returns Response"""
         log.err(error, "Deferred failed")
         return self.__createErrorResponse(request, 500,"Internal server error")
-    
+
     def __createErrorResponse(self,request,code,message):
         """Common method for rendering errors"""
         return Response(code=code, entity=message, headers={"content-type": MediaType.TEXT_PLAIN})
