@@ -15,15 +15,14 @@ from enums import MediaType
 from twisted.internet import defer
 from twisted.web.http import parse_qs
 from twisted.python import log
-import re, copy, exceptions, yaml, logging
+import re, copy, exceptions, yaml,json, logging
 from xml.etree import ElementTree
 
 advanced_json = False
 try:
     import jsonpickle
     advanced_json = True
-except ImportError:
-    import json
+except ImportError: pass
 
 
 class UrlRouter:
@@ -152,12 +151,12 @@ class RequestRouter:
         self.__cachedUrls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict),Http.OPTIONS: defaultdict(dict),Http.PATCH: defaultdict(dict),Http.HEAD: defaultdict(dict)}
         self.__urlRouterInstances = {}
         self.__schema = schema
+        self.__urlsMehods = {}
         self.__registerRouters(restServiceContainer)
         self.__urlContainer = restServiceContainer
         self.__requestFilters = []
         self.__responseFilters = []
-        
-        #filters
+
         if filters != None:
             for webFilter in filters:
                 valid = False
@@ -167,18 +166,18 @@ class RequestRouter:
                 if IResponseFilter.providedBy(webFilter):
                     self.__responseFilters.append(webFilter)
                     valid = True
-    
+
                 if not valid:
                     raise RuntimeError("filter %s must implement IRequestFilter or IResponseFilter" % webFilter.__class__.__name__)
 
     @property
     def path(self):
-        return self.__path    
+        return self.__path
 
     def __registerRouters(self, restServiceContainer):
         """Main method responsible for registering routers"""
         from types import FunctionType
-        
+
         for service in restServiceContainer.services:
             # check if the service has a root path defined, which is optional
             rootPath = service.__class__.path if "path" in service.__class__.__dict__ else ""
@@ -187,7 +186,6 @@ class RequestRouter:
                 func = service.__class__.__dict__[key]
                 # handle REST resources directly on the CorePost resource
                 if type(func) == FunctionType and hasattr(func,'corepostRequestRouter'):
-                    
                     # if specified, add class path to each function's path
                     rq = func.corepostRequestRouter
                     #workaround for multiple passes of __registerRouters (for unit tests etc)
@@ -198,7 +196,7 @@ class RequestRouter:
                         end =  -1 if rq.url[len(rq.url) -1] == '/' else len(rq.url)
                         rq.url = rq.url[start:end]
                         setattr(rq,'urlAdapted',True)
-                        
+
                     # now that the full URL is set, compile the matcher for it
                     rq.compileMatcherForFullUrl()
                     for method in rq.methods:
@@ -206,7 +204,9 @@ class RequestRouter:
                             urlRouterInstance = UrlRouterInstance(service,rq)
                             self.__urls[method][rq.url][accepts] = urlRouterInstance
                             self.__urlRouterInstances[func] = urlRouterInstance # needed so that we can lookup the urlRouterInstance for a specific function
-                            
+                            if self.__urlsMehods.get(rq.url, None) is None:
+                                self.__urlsMehods[rq.url] = []
+                            self.__urlsMehods[rq.url].append(method)
 
     def getResponse(self,request):
         """Finds the appropriate instance and dispatches the request to the registered function. Returns the appropriate Response object"""
@@ -221,7 +221,7 @@ class RequestRouter:
             path = '/'.join(standardized_postpath) 
 
             contentType =  MediaType.WILDCARD if HttpHeader.CONTENT_TYPE not in request.received_headers else request.received_headers[HttpHeader.CONTENT_TYPE]       
-                    
+
             urlRouterInstance, pathargs = None, None
             # fetch URL arguments <-> function from cache if hit at least once before
             if contentType in self.__cachedUrls[request.method][path]:
@@ -241,16 +241,16 @@ class RequestRouter:
                     elif MediaType.WILDCARD in contentTypeInstances:
                         # fall back to any wildcard method
                         instance = contentTypeInstances[MediaType.WILDCARD]
-                   
-                    if instance != None:   
+
+                    if instance != None:
                         # see if the path arguments match up against any function @route definition
                         args = instance.urlRouter.getArguments(path)
                         if args != None:
+                           
                             if instance.urlRouter.cache:
                                 self.__cachedUrls[request.method][path][contentType] = CachedUrl(instance, args)
                             urlRouterInstance,pathargs = instance,args
                             break
-        
             #actual call
             if urlRouterInstance != None and pathargs != None:
                 allargs = copy.deepcopy(pathargs)
@@ -294,10 +294,11 @@ class RequestRouter:
 
                 except Exception as ex:
                     log.err(ex)
-                    response =  self.__createErrorResponse(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))                
-            
-            #if a url is defined, but not the requested method             
-            elif self.__urls[request.method].get(path, {}) == {}:
+                    response =  self.__createErrorResponse(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))
+                    
+            #if a url is defined, but not the requested method
+            elif not request.method in self.__urlsMehods.get(path, []) and self.__urlsMehods.get(path, []) != []:
+                
                 response = self.__createErrorResponse(request,501, "")
             else:
                 log.msg("URL %s not found" % path,logLevel=logging.WARN)

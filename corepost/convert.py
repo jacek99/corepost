@@ -8,6 +8,7 @@ for JSON/XML/YAML output
 
 import collections
 import logging
+import json
 from UserDict import DictMixin
 from twisted.python import log
 
@@ -15,8 +16,8 @@ advanced_json = False
 try:
     import jsonpickle
     advanced_json = True
-except ImportError:
-    import json
+except ImportError: pass
+
 
 primitives = (int, long, float, bool, str,unicode)
 
