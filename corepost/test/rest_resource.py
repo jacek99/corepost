@@ -6,6 +6,17 @@ Server tests
 from corepost import Response, NotFoundException, AlreadyExistsException
 from corepost.web import RESTResource, route, Http 
 
+from twisted.cred.portal import IRealm, Portal
+from twisted.cred.checkers import FilePasswordDB
+from twisted.web.static import File
+from twisted.web.resource import IResource
+from twisted.web.guard import HTTPAuthSessionWrapper, BasicCredentialFactory
+
+from zope.interface import implements
+
+# Security
+
+# Database
 class DB():
     """Fake in-memory DB for testing"""
     customers = {}
@@ -127,7 +138,6 @@ class CustomerAddressRESTService():
         c = DB.getCustomer(customerId)
         c.addresses = {}
         return Response(200)
-
 
 def run_rest_app():
     app = RESTResource((CustomerRESTService(),CustomerAddressRESTService()))
