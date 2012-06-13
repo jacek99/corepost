@@ -380,19 +380,20 @@ class RequestRouter:
         '''Automatically parses JSON,XML,YAML if present'''
         if request.method in (Http.POST,Http.PUT) and HttpHeader.CONTENT_TYPE in request.received_headers.keys():
             contentType = request.received_headers["content-type"]
+            data = request.content.read()
             if contentType == MediaType.APPLICATION_JSON:
                 try:
-                    request.json = json.loads(request.content.read())
+                    request.json = json.loads(data) if data else {}
                 except Exception as ex:
                     raise TypeError("Unable to parse JSON body: %s" % ex)
             elif contentType in (MediaType.APPLICATION_XML,MediaType.TEXT_XML):
                 try: 
-                    request.xml = ElementTree.XML(request.content.read())
+                    request.xml = ElementTree.XML(data)
                 except Exception as ex:
                     raise TypeError("Unable to parse XML body: %s" % ex)
             elif contentType == MediaType.TEXT_YAML:
                 try: 
-                    request.yaml = yaml.safe_load(request.content.read())
+                    request.yaml = yaml.safe_load(data)
                 except Exception as ex:
                     raise TypeError("Unable to parse YAML body: %s" % ex)
 
