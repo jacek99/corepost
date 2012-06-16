@@ -17,6 +17,7 @@ from twisted.web.http import parse_qs
 from twisted.python import log
 import re, copy, exceptions, yaml,json, logging
 from xml.etree import ElementTree
+import uuid
 
 advanced_json = False
 try:
@@ -28,9 +29,9 @@ except ImportError: pass
 class UrlRouter:
     ''' Common class for containing info related to routing a request to a function '''
     
-    __urlMatcher = re.compile(r"<(int|float|):?([^/]+)>")
-    __urlRegexReplace = {"":r"(?P<arg>([^/]+))","int":r"(?P<arg>\d+)","float":r"(?P<arg>\d+.?\d*)"}
-    __typeConverters = {"int":int,"float":float}
+    __urlMatcher = re.compile(r"<(int|float|uuid|):?([^/]+)>")
+    __urlRegexReplace = {"":r"(?P<arg>([^/]+))","int":r"(?P<arg>\d+)","float":r"(?P<arg>\d+.?\d*)","uuid":r"(?P<arg>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})"}
+    __typeConverters = {"int":int,"float":float,"uuid":uuid.UUID}
     
     def __init__(self,f,url,methods,accepts,produces,cache):
         self.__f = f
