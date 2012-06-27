@@ -19,12 +19,6 @@ import re, copy, exceptions, yaml,json, logging
 from xml.etree import ElementTree
 import uuid
 
-advanced_json = False
-try:
-    import jsonpickle
-    advanced_json = True
-except ImportError: pass
-
 
 class UrlRouter:
     ''' Common class for containing info related to routing a request to a function '''
@@ -320,7 +314,9 @@ class RequestRouter:
         Takes care of automatically rendering the response and converting it to appropriate format (text,XML,JSON,YAML)
         depending on what the caller can accept. Returns Response
         """
-        if isinstance(response, Response):
+        if isinstance(response, str):
+            return Response(code,response,{HttpHeader.CONTENT_TYPE: MediaType.TEXT_PLAIN})
+        elif isinstance(response, Response):
             return response
         else:
             (content,contentType) = self.__convertObjectToContentType(request, response)
@@ -331,27 +327,20 @@ class RequestRouter:
         Takes care of converting an object (non-String) response to the appropriate format, based on the what the caller can accept.
         Returns a tuple of (content,contentType)
         """
+        obj = convertForSerialization(obj)
 
         if HttpHeader.ACCEPT in request.received_headers:
             accept = request.received_headers[HttpHeader.ACCEPT]
             if MediaType.APPLICATION_JSON in accept:
-                if not advanced_json:
-                    obj = convertForSerialization(obj)
                 return (convertToJson(obj),MediaType.APPLICATION_JSON)
             elif MediaType.TEXT_YAML in accept:
-                obj = convertForSerialization(obj)
                 return (yaml.dump(obj),MediaType.TEXT_YAML)
             elif MediaType.APPLICATION_XML in accept or MediaType.TEXT_XML in accept:
-                obj = convertForSerialization(obj)
                 return (generateXml(obj),MediaType.APPLICATION_XML)
             else:
                 # no idea, let's do JSON
-                if not advanced_json:
-                    obj = convertForSerialization(obj)
                 return (convertToJson(obj),MediaType.APPLICATION_JSON)
         else:
-            if not advanced_json:
-                obj = convertForSerialization(obj)
             # called has no accept header, let's default to JSON
             return (convertToJson(obj),MediaType.APPLICATION_JSON)
 
@@ -381,20 +370,21 @@ class RequestRouter:
         '''Automatically parses JSON,XML,YAML if present'''
         if request.method in (Http.POST,Http.PUT) and HttpHeader.CONTENT_TYPE in request.received_headers.keys():
             contentType = request.received_headers["content-type"]
-            data = request.content.read()
+            request.data = request.content.read()
+
             if contentType == MediaType.APPLICATION_JSON:
                 try:
-                    request.json = json.loads(data) if data else {}
+                    request.json = json.loads(request.data) if request.data else {}
                 except Exception as ex:
                     raise TypeError("Unable to parse JSON body: %s" % ex)
             elif contentType in (MediaType.APPLICATION_XML,MediaType.TEXT_XML):
                 try: 
-                    request.xml = ElementTree.XML(data)
+                    request.xml = ElementTree.XML(request.data)
                 except Exception as ex:
                     raise TypeError("Unable to parse XML body: %s" % ex)
             elif contentType == MediaType.TEXT_YAML:
                 try: 
-                    request.yaml = yaml.safe_load(data)
+                    request.yaml = yaml.safe_load(request.data)
                 except Exception as ex:
                     raise TypeError("Unable to parse YAML body: %s" % ex)
 
@@ -403,10 +393,12 @@ class RequestRouter:
         # handler for weird Twisted logic where PUT does not get form params
         # see: http://twistedmatrix.com/pipermail/twisted-web/2007-March/003338.html
         requestargs = request.args
+
         if request.method == Http.PUT and HttpHeader.CONTENT_TYPE in request.received_headers.keys() \
             and request.received_headers[HttpHeader.CONTENT_TYPE] == MediaType.APPLICATION_FORM_URLENCODED:
-            requestargs = parse_qs(request.content.read(), 1)
-        
+            # request.data is populated in __parseRequestData
+            requestargs = parse_qs(request.data, 1)
+
         #merge form args
         if len(requestargs.keys()) > 0:
             for arg in requestargs.keys():

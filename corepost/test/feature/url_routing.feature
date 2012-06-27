@@ -43,17 +43,17 @@ Feature: URL routing
 		When as user 'None:None' I DELETE 'http://127.0.0.1:8080/delete'
 		Then I expect HTTP code 200				
 
-	@single @single_post @single_put
+	@single @single_post @single_put @1
 	Scenario: Single resource - multiple methods at same URL
 		Given 'home_resource' is running
 		When as user 'None:None' I POST 'http://127.0.0.1:8080/postput' with 'test=value&test2=value2'
 		# POST return 201 by default
 		Then I expect HTTP code 201
 		And I expect content contains '{'test': 'value', 'test2': 'value2'}'		
-		When as user 'None:None' I PUT 'http://127.0.0.1:8080/postput' with 'test=value&test2=value2'
+		When as user 'None:None' I PUT 'http://127.0.0.1:8080/postput' with 'test=value&test3=value3'
 		# PUT return 201 by default
 		Then I expect HTTP code 200
-		And I expect content contains '{'test': 'value', 'test2': 'value2'}'
+		And I expect content contains '{'test': 'value', 'test3': 'value3'}'
 		
 	@multi
 	Scenario Outline: Multiple resources with submodules

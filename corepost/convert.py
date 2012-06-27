@@ -12,13 +12,6 @@ import json
 from UserDict import DictMixin
 from twisted.python import log
 
-advanced_json = False
-try:
-    import jsonpickle
-    advanced_json = True
-except ImportError: pass
-
-
 primitives = (int, long, float, bool, str,unicode)
 
 def convertForSerialization(obj):
@@ -66,11 +59,6 @@ def traverseDict(dictObject):
 
 def convertToJson(obj):
     """Converts to JSON, including Python classes that are not JSON serializable by default"""
-    if advanced_json:
-        try:
-            return jsonpickle.encode(obj, unpicklable=False)
-        except Exception as ex:
-            raise RuntimeError(str(ex))
     try:
         return json.dumps(obj)
     except Exception as ex:
