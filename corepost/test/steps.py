@@ -55,14 +55,14 @@ def given_process_is_running(processname):
 # WHEN
 ##################################
 
-@When(r"^as user '(.+):(.+)' I (GET|DELETE) '(.+)'\s*$")
+@When(r"^as user '(.+):(.+)' I (GET|DELETE|HEAD|OPTIONS) '(.+)'\s*$")
 def when_as_user_i_send_get_delete_to_url(user,password,method,url):
     h = httplib2.Http()
     h.follow_redirects = False
     h.add_credentials(user, password)
     scc.response, scc.content = h.request(url, method, headers = scc.http_headers)
 
-@When(r"^as user '(.+):(.+)' I (POST|PUT) '(.+)' with '(.+)'\s*$")
+@When(r"^as user '(.+):(.+)' I (POST|PUT|PATCH) '(.+)' with '(.+)'\s*$")
 def when_as_user_i_send_post_put_to_url(user,password,method,url,params):
     h = httplib2.Http()
     h.follow_redirects = False

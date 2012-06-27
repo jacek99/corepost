@@ -114,6 +114,21 @@ class HomeApp():
     def test_issue_1(self,request,**kwargs):
         return self.issue1
 
+    ####################################
+    # extra HTTP methods
+    ####################################
+    @route("/methods/head",Http.HEAD)
+    def test_head_http(self,request,**kwargs):
+        return ""
+
+    @route("/methods/options",Http.OPTIONS)
+    def test_options_http(self,request,**kwargs):
+        return "OPTIONS"
+
+    @route("/methods/patch",Http.PATCH)
+    def test_patch_http(self,request,**kwargs):
+        return "PATCH=%s" % kwargs
+
 def run_app_home():
     app = RESTResource((HomeApp(),))
     app.run()
