@@ -89,7 +89,7 @@ Feature: URL routing
 		Then I expect HTTP code 200
 
     @options
-    Scenario: Support for HTTP OPTIONS
+    Scenario: TODO: Support for HTTP OPTIONS
         Given 'home_resource' is running
         When as user 'None:None' I GET 'http://127.0.0.1:8080/methods/options'
         Then I expect HTTP code 501
@@ -98,7 +98,7 @@ Feature: URL routing
 		Then I expect HTTP code 501
 
     @patch
-    Scenario: Support for HTTP PATCH
+    Scenario: TODO: Support for HTTP PATCH
         Given 'home_resource' is running
         When as user 'None:None' I GET 'http://127.0.0.1:8080/methods/options'
         Then I expect HTTP code 501
