@@ -7,23 +7,31 @@ Common routing classes, regardless of whether used in HTTP or multiprocess conte
 from collections import defaultdict
 from corepost import Response, RESTException
 from corepost.enums import Http, HttpHeader
-from corepost.utils import getMandatoryArgumentNames, convertToJson, safeDictUpdate
-from corepost.convert import convertForSerialization, generateXml
+from corepost.utils import getMandatoryArgumentNames, safeDictUpdate
+from corepost.convert import convertForSerialization, generateXml, convertToJson
 from corepost.filters import IRequestFilter, IResponseFilter
 
 from enums import MediaType
 from twisted.internet import defer
 from twisted.web.http import parse_qs
 from twisted.python import log
-import re, copy, exceptions, json, yaml, logging
+import re, copy, exceptions, yaml,json, logging
 from xml.etree import ElementTree
+import uuid
+
+advanced_json = False
+try:
+    import jsonpickle
+    advanced_json = True
+except ImportError: pass
+
 
 class UrlRouter:
     ''' Common class for containing info related to routing a request to a function '''
     
-    __urlMatcher = re.compile(r"<(int|float|):?([^/]+)>")
-    __urlRegexReplace = {"":r"(?P<arg>([^/]+))","int":r"(?P<arg>\d+)","float":r"(?P<arg>\d+.?\d*)"}
-    __typeConverters = {"int":int,"float":float}
+    __urlMatcher = re.compile(r"<(int|float|uuid|):?([^/]+)>")
+    __urlRegexReplace = {"":r"(?P<arg>([^/]+))","int":r"(?P<arg>\d+)","float":r"(?P<arg>\d+.?\d*)","uuid":r"(?P<arg>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})"}
+    __typeConverters = {"int":int,"float":float,"uuid":uuid.UUID}
     
     def __init__(self,f,url,methods,accepts,produces,cache):
         self.__f = f
@@ -140,16 +148,16 @@ class RequestRouter:
         '''
         Constructor
         '''
-        self.__urls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict)}
-        self.__cachedUrls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict)}
+        self.__urls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict),Http.OPTIONS: defaultdict(dict),Http.PATCH: defaultdict(dict),Http.HEAD: defaultdict(dict)}
+        self.__cachedUrls = {Http.GET: defaultdict(dict),Http.POST: defaultdict(dict),Http.PUT: defaultdict(dict),Http.DELETE: defaultdict(dict),Http.OPTIONS: defaultdict(dict),Http.PATCH: defaultdict(dict),Http.HEAD: defaultdict(dict)}
         self.__urlRouterInstances = {}
         self.__schema = schema
+        self.__urlsMehods = {}
         self.__registerRouters(restServiceContainer)
         self.__urlContainer = restServiceContainer
         self.__requestFilters = []
         self.__responseFilters = []
-        
-        #filters
+
         if filters != None:
             for webFilter in filters:
                 valid = False
@@ -159,18 +167,18 @@ class RequestRouter:
                 if IResponseFilter.providedBy(webFilter):
                     self.__responseFilters.append(webFilter)
                     valid = True
-    
+
                 if not valid:
                     raise RuntimeError("filter %s must implement IRequestFilter or IResponseFilter" % webFilter.__class__.__name__)
 
     @property
     def path(self):
-        return self.__path    
+        return self.__path
 
-    def __registerRouters(self,restServiceContainer):
+    def __registerRouters(self, restServiceContainer):
         """Main method responsible for registering routers"""
         from types import FunctionType
-        
+
         for service in restServiceContainer.services:
             # check if the service has a root path defined, which is optional
             rootPath = service.__class__.path if "path" in service.__class__.__dict__ else ""
@@ -179,24 +187,27 @@ class RequestRouter:
                 func = service.__class__.__dict__[key]
                 # handle REST resources directly on the CorePost resource
                 if type(func) == FunctionType and hasattr(func,'corepostRequestRouter'):
-                    
                     # if specified, add class path to each function's path
                     rq = func.corepostRequestRouter
-                    rq.url = "%s%s" % (rootPath,rq.url)
-                    # remove first and trailing '/' to standardize URLs
-                    start = 1 if rq.url[0:1] == "/" else 0
-                    end =  -1 if rq.url[len(rq.url) -1] == '/' else len(rq.url)
-                    rq.url = rq.url[start:end]
-                     
+                    #workaround for multiple passes of __registerRouters (for unit tests etc)
+                    if not hasattr(rq, 'urlAdapted'):
+                        rq.url = "%s%s" % (rootPath,rq.url)
+                        # remove first and trailing '/' to standardize URLs
+                        start = 1 if rq.url[0:1] == "/" else 0
+                        end =  -1 if rq.url[len(rq.url) -1] == '/' else len(rq.url)
+                        rq.url = rq.url[start:end]
+                        setattr(rq,'urlAdapted',True)
+
                     # now that the full URL is set, compile the matcher for it
                     rq.compileMatcherForFullUrl()
-                    
                     for method in rq.methods:
                         for accepts in rq.accepts:
                             urlRouterInstance = UrlRouterInstance(service,rq)
                             self.__urls[method][rq.url][accepts] = urlRouterInstance
                             self.__urlRouterInstances[func] = urlRouterInstance # needed so that we can lookup the urlRouterInstance for a specific function
-                            
+                            if self.__urlsMehods.get(rq.url, None) is None:
+                                self.__urlsMehods[rq.url] = []
+                            self.__urlsMehods[rq.url].append(method)
 
     def getResponse(self,request):
         """Finds the appropriate instance and dispatches the request to the registered function. Returns the appropriate Response object"""
@@ -211,7 +222,7 @@ class RequestRouter:
             path = '/'.join(standardized_postpath) 
 
             contentType =  MediaType.WILDCARD if HttpHeader.CONTENT_TYPE not in request.received_headers else request.received_headers[HttpHeader.CONTENT_TYPE]       
-                    
+
             urlRouterInstance, pathargs = None, None
             # fetch URL arguments <-> function from cache if hit at least once before
             if contentType in self.__cachedUrls[request.method][path]:
@@ -231,16 +242,16 @@ class RequestRouter:
                     elif MediaType.WILDCARD in contentTypeInstances:
                         # fall back to any wildcard method
                         instance = contentTypeInstances[MediaType.WILDCARD]
-                   
-                    if instance != None:   
+
+                    if instance != None:
                         # see if the path arguments match up against any function @route definition
                         args = instance.urlRouter.getArguments(path)
                         if args != None:
+                           
                             if instance.urlRouter.cache:
                                 self.__cachedUrls[request.method][path][contentType] = CachedUrl(instance, args)
                             urlRouterInstance,pathargs = instance,args
                             break
-        
             #actual call
             if urlRouterInstance != None and pathargs != None:
                 allargs = copy.deepcopy(pathargs)
@@ -284,8 +295,12 @@ class RequestRouter:
 
                 except Exception as ex:
                     log.err(ex)
-                    response =  self.__createErrorResponse(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))                
+                    response =  self.__createErrorResponse(request,500,"Unexpected server error: %s\n%s" % (type(ex),ex))
+                    
+            #if a url is defined, but not the requested method
+            elif not request.method in self.__urlsMehods.get(path, []) and self.__urlsMehods.get(path, []) != []:
                 
+                response = self.__createErrorResponse(request,501, "")
             else:
                 log.msg("URL %s not found" % path,logLevel=logging.WARN)
                 response = self.__createErrorResponse(request,404,"URL '%s' not found\n" % request.path)
@@ -305,9 +320,7 @@ class RequestRouter:
         Takes care of automatically rendering the response and converting it to appropriate format (text,XML,JSON,YAML)
         depending on what the caller can accept. Returns Response
         """
-        if isinstance(response, str):
-            return Response(code,response,{HttpHeader.CONTENT_TYPE: MediaType.TEXT_PLAIN})
-        elif isinstance(response, Response):
+        if isinstance(response, Response):
             return response
         else:
             (content,contentType) = self.__convertObjectToContentType(request, response)
@@ -318,20 +331,27 @@ class RequestRouter:
         Takes care of converting an object (non-String) response to the appropriate format, based on the what the caller can accept.
         Returns a tuple of (content,contentType)
         """
-        obj = convertForSerialization(obj)
-        
+
         if HttpHeader.ACCEPT in request.received_headers:
             accept = request.received_headers[HttpHeader.ACCEPT]
             if MediaType.APPLICATION_JSON in accept:
+                if not advanced_json:
+                    obj = convertForSerialization(obj)
                 return (convertToJson(obj),MediaType.APPLICATION_JSON)
             elif MediaType.TEXT_YAML in accept:
+                obj = convertForSerialization(obj)
                 return (yaml.dump(obj),MediaType.TEXT_YAML)
             elif MediaType.APPLICATION_XML in accept or MediaType.TEXT_XML in accept:
+                obj = convertForSerialization(obj)
                 return (generateXml(obj),MediaType.APPLICATION_XML)
             else:
                 # no idea, let's do JSON
+                if not advanced_json:
+                    obj = convertForSerialization(obj)
                 return (convertToJson(obj),MediaType.APPLICATION_JSON)
         else:
+            if not advanced_json:
+                obj = convertForSerialization(obj)
             # called has no accept header, let's default to JSON
             return (convertToJson(obj),MediaType.APPLICATION_JSON)
 
@@ -352,7 +372,7 @@ class RequestRouter:
         """Finishes any Defered/inlineCallback methods that raised an error. Returns Response"""
         log.err(error, "Deferred failed")
         return self.__createErrorResponse(request, 500,"Internal server error")
-    
+
     def __createErrorResponse(self,request,code,message):
         """Common method for rendering errors"""
         return Response(code=code, entity=message, headers={"content-type": MediaType.TEXT_PLAIN})
@@ -361,19 +381,20 @@ class RequestRouter:
         '''Automatically parses JSON,XML,YAML if present'''
         if request.method in (Http.POST,Http.PUT) and HttpHeader.CONTENT_TYPE in request.received_headers.keys():
             contentType = request.received_headers["content-type"]
+            data = request.content.read()
             if contentType == MediaType.APPLICATION_JSON:
                 try:
-                    request.json = json.loads(request.content.read())
+                    request.json = json.loads(data) if data else {}
                 except Exception as ex:
                     raise TypeError("Unable to parse JSON body: %s" % ex)
             elif contentType in (MediaType.APPLICATION_XML,MediaType.TEXT_XML):
                 try: 
-                    request.xml = ElementTree.XML(request.content.read())
+                    request.xml = ElementTree.XML(data)
                 except Exception as ex:
                     raise TypeError("Unable to parse XML body: %s" % ex)
             elif contentType == MediaType.TEXT_YAML:
                 try: 
-                    request.yaml = yaml.safe_load(request.content.read())
+                    request.yaml = yaml.safe_load(data)
                 except Exception as ex:
                     raise TypeError("Unable to parse YAML body: %s" % ex)
 

@@ -7,27 +7,41 @@ for JSON/XML/YAML output
 '''
 
 import collections
+import logging
+import json
 from UserDict import DictMixin
+from twisted.python import log
+
+advanced_json = False
+try:
+    import jsonpickle
+    advanced_json = True
+except ImportError: pass
+
 
 primitives = (int, long, float, bool, str,unicode)
 
 def convertForSerialization(obj):
     """Converts anything (clas,tuples,list) to the safe serializable equivalent"""
-    if type(obj) in primitives:
+    try:
+        if type(obj) in primitives:
         # no conversion
-        return obj 
-    elif isinstance(obj, dict) or isinstance(obj,DictMixin):
-        return traverseDict(obj)
-    elif isClassInstance(obj):
-        return convertClassToDict(obj)
-    elif isinstance(obj,collections.Iterable) and not isinstance(obj,str):
-        # iterable
-        values = []
-        for val in obj:
-            values.append(convertForSerialization(val))
-        return values
-    else:
-        # return as-is
+            return obj 
+        elif isinstance(obj, dict) or isinstance(obj,DictMixin):
+            return traverseDict(obj)
+        elif isClassInstance(obj):
+            return convertClassToDict(obj)
+        elif isinstance(obj,collections.Iterable) and not isinstance(obj,str):
+            # iterable
+            values = []
+            for val in obj:
+                values.append(convertForSerialization(val))
+            return values
+        else:
+            # return as-is
+            return obj
+    except AttributeError as ex:
+        log.msg(ex,logLevel=logging.WARN)
         return obj
 
 def convertClassToDict(clazz):
@@ -48,6 +62,19 @@ def traverseDict(dictObject):
         newDict[prop] = convertForSerialization(val)
     
     return newDict
+
+
+def convertToJson(obj):
+    """Converts to JSON, including Python classes that are not JSON serializable by default"""
+    if advanced_json:
+        try:
+            return jsonpickle.encode(obj, unpicklable=False)
+        except Exception as ex:
+            raise RuntimeError(str(ex))
+    try:
+        return json.dumps(obj)
+    except Exception as ex:
+        raise RuntimeError(str(ex))
     
 def generateXml(obj):
     """Generates basic XML from an object that has already been converted for serialization"""
