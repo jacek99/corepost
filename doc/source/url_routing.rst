@@ -25,7 +25,7 @@ based on URL (with dynamic paths), HTTP method, expected content type, etc::
             return "%s" % numericid
     
     if __name__ == '__main__':
-        app = RESTResource((RESTService,))
+        app = RESTResource((RESTService(),))
         app.run()
 
 *Note*:
