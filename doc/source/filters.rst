@@ -1,7 +1,7 @@
 Filters
 =======
 
-There is support for CorePost resource filters via the two following *corepost.filter* interfaces::
+There is support for CorePost resource filters via the two following *corepost.filters* interfaces::
 
 	class IRequestFilter(Interface):
 	    """Request filter interface"""    
